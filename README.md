@@ -28,7 +28,7 @@ The RNMCOM Supabase project is provisioned in Singapore:
 - Schema snapshot: `supabase/schema.sql`
 - Generated client types: `lib/database.types.ts`
 
-All three migrations are applied to the live project. All 21 public application tables have RLS enabled; anonymous table grants are revoked. Access is controlled through trusted role assignments and teacher/class and guardian/student relationships. See [Supabase setup](supabase/README.md) before provisioning accounts or importing real student data.
+All versioned migrations currently in the repository have been applied to the connected Supabase project. The 20 public application tables covered by the base schema have RLS enabled; anonymous table grants are revoked. A follow-up migration adds metadata-only audit triggers to 20 operational tables and makes application audit logs append-only. Access is controlled through trusted role assignments and teacher/class and guardian/student relationships. See [Supabase setup](supabase/README.md) before provisioning accounts or importing real student data.
 
 ## Vercel deployment
 
@@ -42,9 +42,9 @@ After Vercel assigns the production domain, add that exact domain to Supabase Au
 
 ## Product scope
 
-The current release provides five role workspaces, responsive navigation, demo dashboard metrics, Supabase-backed loading of permitted students, assignments and announcements, login/password recovery UI, announcement and assignment creation, attendance-session creation, and CSV export for visible lists.
+The current release provides five role workspaces, responsive navigation, persisted light/dark appearance, demo-only illustrative metrics, Supabase-backed loading of permitted students, assignments, classes, subjects, announcements and notifications, login/password recovery UI, announcement and assignment creation, attendance-session creation, safer CSV export for supported lists, and database-level metadata audit triggers. Live mode no longer presents illustrative attendance, timetable, staff, grade, finance or report figures as real school data.
 
-The following workflows still require implementation and school validation before operational use: student/teacher onboarding administration, attendance marking and QR token issuance, student submission upload and teacher grading, direct messaging and push notifications, full fee payment, and production reporting. Finance and student-support records have restrictive database policies but are not complete payment/case-management products.
+The following workflows still require implementation and school validation before operational use: administrator-led user provisioning and onboarding, complete attendance marking/correction/approval and QR token issuance, student submission upload and teacher grading, direct messaging and delivery/read receipts, guardian multi-child selection and communication preferences, full fee payment/reconciliation, and production reporting/analytics. Finance and student-support records have restrictive database policies but are not complete payment/case-management products. Do not switch Production out of Demo Mode until the first trusted administrator is provisioned, real school records are loaded and verified, and these core workflows pass role-based acceptance tests.
 
 ## Design source
 
