@@ -18,7 +18,7 @@ export default function LoginPage() {
   const [routeNotice, setRouteNotice] = useState("");
   const demoMode = !process.env.NEXT_PUBLIC_SUPABASE_URL ||
     !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.RNMCOM_DEMO_MODE === "true";
+    process.env.NEXT_PUBLIC_RNMCOM_DEMO_MODE === "true";
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
