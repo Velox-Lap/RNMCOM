@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 const isConfigured = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_URL &&
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY &&
-  process.env.RNMCOM_DEMO_MODE !== "true"
+  process.env.NEXT_PUBLIC_RNMCOM_DEMO_MODE !== "true"
 );
 
 export default async function DashboardPage() {
