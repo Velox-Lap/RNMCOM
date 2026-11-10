@@ -210,7 +210,7 @@ function Dashboard({
         { title: "Start attendance", detail: "Take class register", icon: CalendarCheck, view: "attendance", kind: "attendance" },
         { title: "Create assignment", detail: "Set learning task", icon: ClipboardList, view: "assignments", kind: "assignment" },
         { title: "Review submissions", detail: "6 to grade", icon: FileCheck, view: "assignments" },
-        { title: "Send announcement", detail: "Contact your classes", icon: SendIcon, view: "communication", kind: "announcement" },
+        { title: "Send announcement", detail: "Contact your classes", icon: ArrowUpRight, view: "communication", kind: "announcement" },
       ]
       : role === "homeroom_teacher"
         ? [
@@ -278,9 +278,6 @@ function Dashboard({
   );
 }
 
-function SendIcon({ size = 16 }: { size?: number }) {
-  return <ArrowUpRight size={size} />;
-}
 
 function StudentTable({ rows }: { rows: StudentRow[] }) {
   return (
