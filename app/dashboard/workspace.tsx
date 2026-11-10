@@ -473,9 +473,9 @@ export function Workspace({
     if (userError || !userData.user) { setBusy(false); return setFormError("Your session could not be verified. Sign in again."); }
 
     if (modalKind === "announcement") {
-      const audience = draftAudience === "all"
+      const audience: AppRole[] = draftAudience === "all"
         ? ["admin", "teacher", "homeroom_teacher", "student", "parent"]
-        : [draftAudience];
+        : [draftAudience as AppRole];
       const { error } = await supabase.from("announcements").insert({
         title: draftTitle.trim(),
         body: draftBody.trim(),
