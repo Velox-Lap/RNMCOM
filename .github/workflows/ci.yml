@@ -14,8 +14,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm install
+      - run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rnmcom-package-lock
+          path: package-lock.json
+          if-no-files-found: ignore
+      - run: npm install --ignore-scripts --no-audit --no-fund
       - run: npm run typecheck
       - run: npm run build
         env:
