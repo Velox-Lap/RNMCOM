@@ -28,7 +28,7 @@ The RNMCOM Supabase project is provisioned in Singapore:
 - Schema snapshot: `supabase/schema.sql`
 - Generated client types: `lib/database.types.ts`
 
-Both migrations are applied to the live project. All 20 public application tables have RLS enabled. Access is controlled through trusted role assignments and teacher/class and guardian/student relationships. See [Supabase setup](supabase/README.md) before provisioning accounts or importing real student data.
+All three migrations are applied to the live project. All 21 public application tables have RLS enabled; anonymous table grants are revoked. Access is controlled through trusted role assignments and teacher/class and guardian/student relationships. See [Supabase setup](supabase/README.md) before provisioning accounts or importing real student data.
 
 ## Vercel deployment
 
