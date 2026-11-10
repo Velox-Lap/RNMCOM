@@ -697,7 +697,14 @@ using (private.has_role('admin'));
 create policy "audit_logs_insert_actor" on public.audit_logs for insert to authenticated
 with check (actor_id = (select auth.uid()));
 
--- Explicit Data API grants; RLS remains the row-level security boundary.
+-- Explicit Data API grants; remove inherited anonymous/public access first.
+revoke all on schema public from public, anon;
+revoke all on all tables in schema public from public, anon;
+revoke all on all sequences in schema public from public, anon;
+alter default privileges in schema public revoke all on tables from public, anon;
+alter default privileges in schema public revoke all on sequences from public, anon;
+
+-- RLS remains the row-level authorization boundary for authenticated users.
 grant usage on schema public to authenticated;
 grant select, insert, update on
   public.profiles, public.user_roles, public.classes, public.students, public.teachers,
