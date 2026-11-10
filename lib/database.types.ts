@@ -1046,6 +1046,101 @@ export type Database = {
         }
         Relationships: []
       }
+      tcas_lesson_progress: {
+        Row: {
+          completed_at: string | null
+          id: string
+          last_position_seconds: number
+          lesson_id: string
+          progress_percent: number
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          id?: string
+          last_position_seconds?: number
+          lesson_id: string
+          progress_percent?: number
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          id?: string
+          last_position_seconds?: number
+          lesson_id?: string
+          progress_percent?: number
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcas_lesson_progress_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "tcas_lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tcas_lesson_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tcas_lessons: {
+        Row: {
+          content: string
+          created_at: string
+          duration_minutes: number
+          exam_set_id: string
+          id: string
+          is_published: boolean
+          lesson_type: string
+          sort_order: number
+          summary: string
+          title: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          duration_minutes?: number
+          exam_set_id: string
+          id?: string
+          is_published?: boolean
+          lesson_type?: string
+          sort_order?: number
+          summary?: string
+          title: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          duration_minutes?: number
+          exam_set_id?: string
+          id?: string
+          is_published?: boolean
+          lesson_type?: string
+          sort_order?: number
+          summary?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcas_lessons_exam_set_id_fkey"
+            columns: ["exam_set_id"]
+            isOneToOne: false
+            referencedRelation: "tcas_exam_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tcas_questions: {
         Row: {
           exam_set_id: string
@@ -1089,6 +1184,89 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "tcas_questions_exam_set_id_fkey"
+            columns: ["exam_set_id"]
+            isOneToOne: false
+            referencedRelation: "tcas_exam_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tcas_study_sessions: {
+        Row: {
+          duration_seconds: number
+          ended_at: string | null
+          exam_set_id: string | null
+          id: string
+          note: string
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          duration_seconds?: number
+          ended_at?: string | null
+          exam_set_id?: string | null
+          id?: string
+          note?: string
+          started_at?: string
+          user_id: string
+        }
+        Update: {
+          duration_seconds?: number
+          ended_at?: string | null
+          exam_set_id?: string | null
+          id?: string
+          note?: string
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcas_study_sessions_exam_set_id_fkey"
+            columns: ["exam_set_id"]
+            isOneToOne: false
+            referencedRelation: "tcas_exam_sets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tcas_study_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tcas_vocabulary: {
+        Row: {
+          exam_set_id: string | null
+          example: string
+          id: string
+          is_published: boolean
+          meaning: string
+          sort_order: number
+          term: string
+        }
+        Insert: {
+          exam_set_id?: string | null
+          example?: string
+          id?: string
+          is_published?: boolean
+          meaning: string
+          sort_order?: number
+          term: string
+        }
+        Update: {
+          exam_set_id?: string | null
+          example?: string
+          id?: string
+          is_published?: boolean
+          meaning?: string
+          sort_order?: number
+          term?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcas_vocabulary_exam_set_id_fkey"
             columns: ["exam_set_id"]
             isOneToOne: false
             referencedRelation: "tcas_exam_sets"
