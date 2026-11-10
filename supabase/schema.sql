@@ -586,8 +586,36 @@ with check (
   ))
 );
 create policy "grades_update_staff" on public.grades for update to authenticated
-using (private.has_role('admin') or recorded_by = (select auth.uid()))
-with check (private.has_role('admin') or recorded_by = (select auth.uid()));
+using (
+  private.has_role('admin')
+  or (
+    recorded_by = (select auth.uid())
+    and exists (
+      select 1
+      from public.students s
+      join public.teaching_assignments ta
+        on ta.class_id = s.class_id
+       and ta.subject_id = grades.subject_id
+      where s.id = grades.student_id
+        and ta.teacher_id = (select auth.uid())
+    )
+  )
+)
+with check (
+  private.has_role('admin')
+  or (
+    recorded_by = (select auth.uid())
+    and exists (
+      select 1
+      from public.students s
+      join public.teaching_assignments ta
+        on ta.class_id = s.class_id
+       and ta.subject_id = grades.subject_id
+      where s.id = grades.student_id
+        and ta.teacher_id = (select auth.uid())
+    )
+  )
+);
 
 -- Communication.
 create policy "announcements_read_audience" on public.announcements for select to authenticated
@@ -671,7 +699,7 @@ with check (actor_id = (select auth.uid()));
 
 -- Explicit Data API grants; RLS remains the row-level security boundary.
 grant usage on schema public to authenticated;
-grant select, insert, update, delete on
+grant select, insert, update on
   public.profiles, public.user_roles, public.classes, public.students, public.teachers,
   public.subjects, public.teaching_assignments, public.enrollments, public.student_guardians,
   public.attendance_sessions, public.attendance_records, public.assignments, public.submissions,
