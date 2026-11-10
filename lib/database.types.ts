@@ -854,6 +854,248 @@ export type Database = {
           },
         ]
       }
+      tcas_attempt_answers: {
+        Row: {
+          answer: Json | null
+          answered_at: string
+          attempt_id: string
+          flag_for_review: boolean
+          id: string
+          question_id: string
+        }
+        Insert: {
+          answer?: Json | null
+          answered_at?: string
+          attempt_id: string
+          flag_for_review?: boolean
+          id?: string
+          question_id: string
+        }
+        Update: {
+          answer?: Json | null
+          answered_at?: string
+          attempt_id?: string
+          flag_for_review?: boolean
+          id?: string
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcas_attempt_answers_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: false
+            referencedRelation: "tcas_attempts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tcas_attempt_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "tcas_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tcas_attempt_results: {
+        Row: {
+          attempt_id: string
+          correct_answer: Json
+          earned_points: number
+          explanation: string
+          id: string
+          is_correct: boolean
+          max_points: number
+          question_id: string
+          solution_steps: Json
+          submitted_answer: Json | null
+        }
+        Insert: {
+          attempt_id: string
+          correct_answer: Json
+          earned_points?: number
+          explanation: string
+          id?: string
+          is_correct: boolean
+          max_points: number
+          question_id: string
+          solution_steps?: Json
+          submitted_answer?: Json | null
+        }
+        Update: {
+          attempt_id?: string
+          correct_answer?: Json
+          earned_points?: number
+          explanation?: string
+          id?: string
+          is_correct?: boolean
+          max_points?: number
+          question_id?: string
+          solution_steps?: Json
+          submitted_answer?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcas_attempt_results_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: false
+            referencedRelation: "tcas_attempts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tcas_attempt_results_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "tcas_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tcas_attempts: {
+        Row: {
+          correct_count: number
+          earned_points: number
+          exam_set_id: string
+          id: string
+          max_points: number
+          question_count: number
+          started_at: string
+          status: string
+          submitted_at: string | null
+          time_limit_seconds: number
+          user_id: string
+        }
+        Insert: {
+          correct_count?: number
+          earned_points?: number
+          exam_set_id: string
+          id?: string
+          max_points?: number
+          question_count?: number
+          started_at?: string
+          status?: string
+          submitted_at?: string | null
+          time_limit_seconds: number
+          user_id: string
+        }
+        Update: {
+          correct_count?: number
+          earned_points?: number
+          exam_set_id?: string
+          id?: string
+          max_points?: number
+          question_count?: number
+          started_at?: string
+          status?: string
+          submitted_at?: string | null
+          time_limit_seconds?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcas_attempts_exam_set_id_fkey"
+            columns: ["exam_set_id"]
+            isOneToOne: false
+            referencedRelation: "tcas_exam_sets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tcas_attempts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tcas_exam_sets: {
+        Row: {
+          code: string
+          created_at: string
+          description: string
+          duration_minutes: number
+          exam_group: string
+          formats: string[]
+          id: string
+          is_published: boolean
+          slug: string
+          title: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string
+          duration_minutes?: number
+          exam_group: string
+          formats?: string[]
+          id?: string
+          is_published?: boolean
+          slug: string
+          title: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string
+          duration_minutes?: number
+          exam_group?: string
+          formats?: string[]
+          id?: string
+          is_published?: boolean
+          slug?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      tcas_questions: {
+        Row: {
+          exam_set_id: string
+          format: string
+          id: string
+          options: Json
+          passage: string | null
+          points: number
+          prompt: string
+          question_no: number
+          question_type: string
+          section: string
+          sort_order: number
+        }
+        Insert: {
+          exam_set_id: string
+          format: string
+          id?: string
+          options?: Json
+          passage?: string | null
+          points?: number
+          prompt: string
+          question_no: number
+          question_type?: string
+          section: string
+          sort_order?: number
+        }
+        Update: {
+          exam_set_id?: string
+          format?: string
+          id?: string
+          options?: Json
+          passage?: string | null
+          points?: number
+          prompt?: string
+          question_no?: number
+          question_type?: string
+          section?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcas_questions_exam_set_id_fkey"
+            columns: ["exam_set_id"]
+            isOneToOne: false
+            referencedRelation: "tcas_exam_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teachers: {
         Row: {
           created_at: string
@@ -975,7 +1217,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      grade_tcas_attempt: { Args: { _attempt_id: string }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "teacher" | "homeroom_teacher" | "student" | "parent"
