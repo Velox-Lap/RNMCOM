@@ -1,26 +1,47 @@
 # Supabase setup for RNMCOM
 
-## Project setup
+## Live project
 
-1. Create a separate Supabase project for RNMCOM.
-2. Use a Singapore region for the Thai user base.
-3. Copy the Project URL and publishable key into `.env.local` using `.env.example`.
-4. Apply `schema.sql` once to the new, empty database.
-5. Create trusted school user accounts in Supabase Auth. Public self-registration is intentionally not exposed.
-6. For the first administrator, copy the user's Auth UUID and run the bootstrap INSERT shown at the bottom of `schema.sql`.
-7. Provision other users and assign one or more rows in `user_roles`. Mark exactly one role as `is_primary = true` for the initial landing workspace.
-8. Link guardians through `student_guardians`; grant finance access only where the school has explicitly approved it.
+- Project: RNMCOM
+- Project ref: `psgfyujnvidtwvegucnh`
+- Region: Singapore (`ap-southeast-1`)
+- API URL: `https://psgfyujnvidtwvegucnh.supabase.co`
+- Database engine: PostgreSQL 17
+
+The initial schema and policy/performance cleanup migrations have been applied successfully. Both migration files are kept in `supabase/migrations/` for reproducible setup.
+
+## Application configuration
+
+Copy `.env.example` to `.env.local`. The file includes the public Project URL and publishable key. The publishable key is intended for browser clients; database RLS policies are the security boundary. Never expose a Supabase secret/service key in a `NEXT_PUBLIC_*` variable or commit one to Git.
+
+The local starter defaults to demo mode. To enable authenticated data access, set `NEXT_PUBLIC_RNMCOM_DEMO_MODE=false` only after accounts and school records have been provisioned.
+
+## First administrator and account provisioning
+
+1. Create the trusted administrator in Supabase Auth (email/password or an administrator-issued invitation).
+2. Copy the resulting Auth user UUID.
+3. Run the bootstrap INSERT from the bottom of `schema.sql`, replacing `<AUTH_USER_UUID>` with the trusted user's UUID.
+4. Mark exactly one role as `is_primary = true` for the initial landing workspace.
+5. Create class, subject, student and teacher records, then map teaching assignments.
+6. Link each guardian to the correct student using `student_guardians`; grant finance access only when formally approved.
+7. Add the production Vercel domain to Supabase Auth Site URL and Redirect URLs after deployment.
+
+Public self-registration is intentionally not exposed. Never grant the admin role from user-editable sign-up metadata.
 
 ## Security model
 
+- All 20 exposed public application tables have RLS enabled.
+- Roles are read from `user_roles`, not user-editable metadata.
+- Guardian access requires an explicit relationship row and per-domain permission flags.
+- Student-support records are restricted to administrators and designated homeroom teachers.
 - Browser clients use only the publishable key.
-- The secret/service key must remain server-side and is not required by the current browser application.
-- Every public application table has RLS enabled.
-- Role grants are held in `user_roles`, not user-editable metadata.
-- A guardian's access depends on their explicit relationship row and the per-domain permission flags.
-- Student support cases are restricted to administrators and the designated homeroom teacher.
-- Audit logs are readable only by administrators.
+- The Supabase security advisor returned no lints after the migrations.
+- Duplicate permissive SELECT policy overlaps were removed; foreign-key indexes were added where the advisor identified missing coverage.
 
-## Operational notes
+## Implemented product workflows
 
-This first release is a single-school foundation. Multi-school tenancy, direct messaging, push delivery, a full fee-payment lifecycle, QR attendance token issuance and report exports should be added only after the core schema and workflows have been validated with the school.
+The current UI reads permitted student, assignment, class, subject and announcement records, and supports authenticated announcement creation, assignment creation, and attendance-session creation.
+
+## Not yet production-complete
+
+Attendance marking, QR token issuance/expiry, student file uploads/submissions, teacher grading workflows, direct messaging, push delivery, full payment collection/reconciliation, complete report generation, and automated operational audit events require further implementation and school acceptance testing. Do not use the platform as the live student system until these workflows, account permissions, privacy notices, backups, and operational procedures have been validated.
