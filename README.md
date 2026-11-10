@@ -2,36 +2,54 @@
 
 RNMCOM is a role-aware school operations workspace for administrators, teachers, homeroom teachers, students, and parents.
 
-## Product principles
-
-- One source of truth for school records.
-- Security by design: server-verified identity, role-aware access, and row-level security.
-- User-centered workflows: each dashboard prioritizes monitoring, decisions, and the next action.
-- Responsive layouts for desktop, tablet, and mobile.
-- Student privacy first; sensitive student-support information is restricted to authorized school staff.
-
 ## Stack
 
 - Next.js App Router + React + TypeScript
-- Tailwind CSS v4 (with a small product-specific CSS system)
-- Supabase Auth, PostgreSQL, and Row Level Security
-- Lucide icons
+- Tailwind CSS v4 and Lucide icons
+- Supabase Auth + PostgreSQL + Row Level Security
+- Vercel-ready deployment (Next.js framework auto-detection)
 
-## Development
+## Run locally
 
-1. Copy `.env.example` to `.env.local`.
-2. Add the Supabase project URL and publishable key.
-3. Install dependencies with `npm install`.
+1. Install Node.js 20.9+.
+2. Copy `.env.example` to `.env.local`.
+3. Run `npm ci`.
 4. Run `npm run dev`.
 
-When Supabase environment variables are absent, the app opens in a clearly labelled demo workspace using non-real sample data. Demo mode is for interface review only and is not an authentication or authorization mechanism.
+The local starter remains in demo mode by default. It uses illustrative sample data and does not write to the live school database.
 
-## Database
+## Supabase backend
 
-See `supabase/schema.sql` for the initial schema, constraints, indexes, and role/relationship-aware RLS policies. The schema is designed for a single school tenant at the initial launch, with explicit guardian-to-student and teacher-to-class relationships.
+The RNMCOM Supabase project is provisioned in Singapore:
 
-## Scope and status
+- Project ref: `psgfyujnvidtwvegucnh`
+- API URL: `https://psgfyujnvidtwvegucnh.supabase.co`
+- Database migrations: `supabase/migrations/`
+- Schema snapshot: `supabase/schema.sql`
+- Generated client types: `lib/database.types.ts`
 
-This repository starts from an empty Git repository. The implementation is built from the supplied RNMCOM Full Product Audit. The latest Figma prototype could not be fetched through the Figma MCP during this session because the connected Starter plan had reached its tool-call limit; the audit is therefore the current implementation specification until a fresh Figma read is available.
+Both migrations are applied to the live project. All 20 public application tables have RLS enabled. Access is controlled through trusted role assignments and teacher/class and guardian/student relationships. See [Supabase setup](supabase/README.md) before provisioning accounts or importing real student data.
 
-The sample dashboard metrics in demo mode are illustrative values taken from the supplied audit, not live school records.
+## Vercel deployment
+
+Import `Velox-Lap/RNMCOM` into Vercel as a Next.js project, then add these environment variables to Preview and Production:
+
+- `NEXT_PUBLIC_SUPABASE_URL` — use the value in `.env.example`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — use the value in `.env.example`
+- `NEXT_PUBLIC_RNMCOM_DEMO_MODE` — keep `true` during review; change to `false` only after the first administrator and school data are provisioned.
+
+After Vercel assigns the production domain, add that exact domain to Supabase Auth's Site URL and Redirect URLs. Do not add a Supabase secret/service key to browser-exposed environment variables.
+
+## Product scope
+
+The current release provides five role workspaces, responsive navigation, demo dashboard metrics, Supabase-backed loading of permitted students, assignments and announcements, login/password recovery UI, announcement and assignment creation, attendance-session creation, and CSV export for visible lists.
+
+The following workflows still require implementation and school validation before operational use: student/teacher onboarding administration, attendance marking and QR token issuance, student submission upload and teacher grading, direct messaging and push notifications, full fee payment, and production reporting. Finance and student-support records have restrictive database policies but are not complete payment/case-management products.
+
+## Design source
+
+The implementation was derived from the supplied RNMCOM Full Product Audit. A fresh read of the latest Figma prototype was blocked by the connected Figma Starter plan's tool-call limit during implementation; pixel-level parity with the latest Figma file has not been verified.
+
+## CI
+
+GitHub Actions runs dependency installation, TypeScript checks, and a production Next.js build on pushes and pull requests to `main`.
