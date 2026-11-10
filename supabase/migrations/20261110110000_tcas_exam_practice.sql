@@ -48,3 +48,41 @@ insert into public.tcas_exam_sets(slug,code,title,exam_group,description,duratio
 ('a-level-biology','A-LEVEL','A-Level ชีววิทยา','A_LEVEL','ทบทวนระบบต่าง ๆ ของร่างกาย',12,array['ระบบย่อยอาหาร','ระบบหายใจ','ระบบหมุนเวียนเลือด'],true) on conflict(slug) do nothing;
 comment on table public.tcas_questions is 'Original RNMCOM practice questions; answer keys are private.';
 comment on table private.tcas_answer_keys is 'Private grading keys, never exposed through the Data API.';
+
+-- Original RNMCOM starter questions. These are practice items, not official past papers.
+insert into public.tcas_questions(exam_set_id,question_no,section,format,prompt,passage,options,points,sort_order)
+select s.id,v.n,v.section,v.format,v.prompt,v.passage,v.options,1,v.n from (values
+('tgat1-communication',1,'Speaking','ถาม-ตอบ','You are invited to a meeting, but you already have another commitment. Which response is the most natural and polite?',null,'["I do not care about the meeting.","Thanks for inviting me, but I have another commitment. Could we find another time?","You must change the meeting for me.","Meeting is not my thing."]'::jsonb),
+('tgat1-communication',2,'Speaking','บทสนทนาสั้น','Choose the best response. A: “Would you mind opening the window?” B: “_____”',null,'["Not at all.","Yes, I would mind you.","I am not a window.","The window was yesterday."]'::jsonb),
+('tgat1-communication',3,'Speaking','บทสนทนายาว','Mina: “I heard you got the internship!” Arun: “Yes, I start next month.” Mina: “_____”',null,'["That sounds like a great opportunity. Congratulations!","You should not have applied.","I do not know what month it is.","Internships are always impossible."]'::jsonb),
+('tgat1-communication',4,'Reading','เติมข้อความ','Choose the word that best completes: “Although the weather was poor, the team _____ the outdoor survey.”',null,'["called off","gave up","carried out","looked after"]'::jsonb),
+('tgat1-communication',5,'Reading','อ่านจับใจความ','What is the main purpose of the passage?','A community library started a weekend reading club for teenagers. Volunteers help members choose books, discuss stories, and practise presenting their ideas. After three months, the library noticed that more teenagers were borrowing books and attending community events.','["To advertise a new commercial bookstore.","To describe how a reading club encourages teenagers to read and participate.","To explain why libraries should close on weekends.","To compare school examinations in different towns."]'::jsonb),
+('tgat2-reasoning',1,'ภาษา','การสื่อความหมาย','สุภาษิต “น้ำขึ้นให้รีบตัก” สื่อความหมายใกล้เคียงกับข้อใดมากที่สุด',null,'["ทำงานโดยไม่วางแผน","ใช้โอกาสที่เหมาะสมให้เกิดประโยชน์","รอให้ผู้อื่นตัดสินใจแทน","หลีกเลี่ยงความเปลี่ยนแปลง"]'::jsonb),
+('tgat2-reasoning',2,'จำนวน','อนุกรมตัวเลข','ลำดับ 2, 6, 12, 20, 30, ... จำนวนถัดไปคือข้อใด',null,'["36","40","41","42"]'::jsonb),
+('tgat2-reasoning',3,'มิติสัมพันธ์','พับกล่อง','กำหนดให้หน้าตรงข้ามของลูกบาศก์เป็นคู่ A–D, B–E และ C–F หน้าที่อยู่ตรงข้ามกับ B คือข้อใด',null,'["A","C","D","E"]'::jsonb),
+('tgat2-reasoning',4,'เหตุผล','สรุปความ','นักเรียนทุกคนในชมรมวิทยาศาสตร์ชอบทดลอง และนิดเป็นสมาชิกชมรมวิทยาศาสตร์ ข้อสรุปใดสมเหตุสมผล',null,'["นิดเป็นครูวิทยาศาสตร์","นักเรียนทุกคนเป็นสมาชิกชมรม","นิดชอบทดลอง","สมาชิกชมรมทุกคนเป็นนักเรียน"]'::jsonb),
+('tpat3-aptitude',1,'ตัวเลข','อนุกรมตัวเลข','ลำดับ 5, 9, 17, 33, 65, ... จำนวนถัดไปคือข้อใด',null,'["97","121","129","130"]'::jsonb),
+('tpat3-aptitude',2,'มิติสัมพันธ์','ภาพด้าน 3 มิติ','วัตถุทรงลูกบาศก์ถูกมองจากด้านบน ภาพฉายพื้นฐานเป็นรูปใด',null,'["วงกลม","สี่เหลี่ยมจัตุรัส","สามเหลี่ยม","ห้าเหลี่ยม"]'::jsonb),
+('tpat3-aptitude',3,'กลไก','กลไกเครื่องกล','คานชนิดที่ 1 มีจุดหมุนอยู่ระหว่างแรงพยายามกับแรงต้าน ตัวอย่างใดตรงกับหลักการนี้',null,'["รถเข็นดิน","แหนบ","กรรไกร","ที่เปิดขวด"]'::jsonb),
+('a-level-biology',1,'ระบบหายใจ','ระบบหายใจ','บริเวณใดของปอดเป็นตำแหน่งหลักที่เกิดการแลกเปลี่ยนแก๊สระหว่างอากาศกับเลือด',null,'["ถุงลมปอด","หลอดลมคอ","กล่องเสียง","โพรงจมูก"]'::jsonb),
+('a-level-biology',2,'ระบบหมุนเวียนเลือด','ระบบหมุนเวียนเลือด','หลอดเลือดชนิดใดทำหน้าที่นำเลือดออกจากหัวใจไปยังส่วนต่าง ๆ ของร่างกาย',null,'["หลอดเลือดดำ","หลอดเลือดฝอย","หลอดเลือดแดง","ท่อน้ำเหลือง"]'::jsonb),
+('a-level-biology',3,'ระบบย่อยอาหาร','ระบบย่อยอาหาร','เอนไซม์อะไมเลสในน้ำลายเริ่มย่อยสารอาหารชนิดใด',null,'["โปรตีน","แป้ง","ไขมัน","กรดนิวคลีอิก"]'::jsonb)
+) as v(slug,n,section,format,prompt,passage,options) join public.tcas_exam_sets s on s.slug=v.slug on conflict(exam_set_id,question_no) do nothing;
+insert into private.tcas_answer_keys(question_id,correct_answer,explanation)
+select q.id,v.answer,v.explanation from (values
+('tgat1-communication',1,'"B"'::jsonb,'คำตอบ B สุภาพและชัดเจน: ขอบคุณสำหรับคำเชิญ แจ้งว่าติดภารกิจ และเสนอเวลาทางเลือก','[]'::jsonb),
+('tgat1-communication',2,'"A"'::jsonb,'Not at all หมายถึงไม่รังเกียจ เป็นการตอบรับคำขออย่างเป็นธรรมชาติ','[]'::jsonb),
+('tgat1-communication',3,'"A"'::jsonb,'เมื่อเพื่อนบอกข่าวดี คำตอบที่เหมาะสมคือแสดงความยินดี','[]'::jsonb),
+('tgat1-communication',4,'"C"'::jsonb,'carried out หมายถึงดำเนินการ จึงเข้ากับการสำรวจภาคสนาม','[]'::jsonb),
+('tgat1-communication',5,'"B"'::jsonb,'ใจความหลักคือชมรมอ่านหนังสือช่วยให้วัยรุ่นอ่านหนังสือและเข้าร่วมกิจกรรมชุมชนมากขึ้น','[]'::jsonb),
+('tgat2-reasoning',1,'"B"'::jsonb,'สุภาษิตนี้สอนให้ใช้ประโยชน์จากโอกาสที่เอื้ออำนวย','[]'::jsonb),
+('tgat2-reasoning',2,'"D"'::jsonb,'ผลต่างคือ 4, 6, 8, 10 ดังนั้นผลต่างถัดไปคือ 12 และ 30 + 12 = 42','[]'::jsonb),
+('tgat2-reasoning',3,'"D"'::jsonb,'โจทย์กำหนดคู่หน้าตรงข้าม B–E โดยตรง จึงตอบ E','[]'::jsonb),
+('tgat2-reasoning',4,'"C"'::jsonb,'เมื่อนิดเป็นสมาชิกชมรมและสมาชิกทุกคนชอบทดลอง จึงสรุปได้ว่านิดชอบทดลอง','[]'::jsonb),
+('tpat3-aptitude',1,'"C"'::jsonb,'แต่ละพจน์คูณ 2 แล้วลบ 1 ดังนั้น 65 × 2 − 1 = 129','[]'::jsonb),
+('tpat3-aptitude',2,'"B"'::jsonb,'เมื่อมองลูกบาศก์จากด้านบน ภาพฉายพื้นฐานเป็นสี่เหลี่ยมจัตุรัส','[]'::jsonb),
+('tpat3-aptitude',3,'"C"'::jsonb,'กรรไกรเป็นคานชนิดที่ 1 เพราะจุดหมุนอยู่ระหว่างแรงพยายามและแรงต้าน','[]'::jsonb),
+('a-level-biology',1,'"A"'::jsonb,'ถุงลมปอดมีผนังบางและเส้นเลือดฝอยหนาแน่น จึงเป็นบริเวณแลกเปลี่ยนแก๊ส','[]'::jsonb),
+('a-level-biology',2,'"C"'::jsonb,'หลอดเลือดแดงนำเลือดออกจากหัวใจไปยังอวัยวะต่าง ๆ','[]'::jsonb),
+('a-level-biology',3,'"B"'::jsonb,'อะไมเลสในน้ำลายเริ่มย่อยแป้งให้เป็นน้ำตาลสายสั้น','[]'::jsonb)
+) as v(slug,n,answer,explanation,unused) join public.tcas_exam_sets s on s.slug=v.slug join public.tcas_questions q on q.exam_set_id=s.id and q.question_no=v.n on conflict(question_id) do nothing;
