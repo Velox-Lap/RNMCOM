@@ -13,7 +13,7 @@ RNMCOM is a role-aware school operations workspace for administrators, teachers,
 
 1. Install Node.js 20.9+.
 2. Copy `.env.example` to `.env.local`.
-3. Run `npm ci`.
+3. Run `npm install`.
 4. Run `npm run dev`.
 
 The local starter remains in demo mode by default. It uses illustrative sample data and does not write to the live school database.
