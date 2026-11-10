@@ -601,13 +601,13 @@ export function Workspace({
     if (rows.length === 0) { setToast("There are no records to export."); return; }
     const csvCell = (value: unknown) => {
       const raw = String(value ?? "");
-      const safe = /^[\\s]*[=+\\-@]/.test(raw) ? `'${raw}` : raw;
+      const safe = /^\\s*(?:=|\\+|-|@)/.test(raw) ? `'${raw}` : raw;
       return `"${safe.replaceAll('"', '""')}"`;
     };
     const csv = [Object.keys(rows[0]).map(csvCell).join(","), ...rows.map((row) =>
       Object.values(row).map(csvCell).join(",")
     )].join("\r\n");
-    const blob = new Blob(["\\uFEFF", csv], { type: "text/csv;charset=utf-8" });
+    const blob = new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
