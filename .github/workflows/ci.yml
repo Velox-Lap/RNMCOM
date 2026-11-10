@@ -21,10 +21,10 @@ jobs:
           name: rnmcom-package-lock
           path: package-lock.json
           if-no-files-found: ignore
-      - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: npm run typecheck
       - run: npm run build
         env:
           NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_placeholder
-          RNMCOM_DEMO_MODE: "true"
+          NEXT_PUBLIC_RNMCOM_DEMO_MODE: "true"
