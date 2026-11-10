@@ -7,13 +7,14 @@ import {
   Bell, BookOpen, CalendarCheck, CalendarClock, CalendarDays, Check,
   CheckCircle2, ChevronDown, CircleHelp, Clock3, Download, FileCheck,
   Filter, GraduationCap, LayoutDashboard, LogOut, Mail, Menu, MessageSquare,
-  MoreHorizontal, Plus, Search, Settings, ShieldCheck, Sparkles, Users,
+  MoreHorizontal, Moon, Plus, Search, Settings, ShieldCheck, Sparkles, Sun, Users,
   Wallet, X, UserRound, ClipboardList, FileText, UserPlus
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { TcasModule } from "@/app/dashboard/tcas-module";
 import { TcasLearningModule } from "@/app/dashboard/tcas-learning-module";
 import { createClient } from "@/lib/supabase/client";
+import { useTheme } from "@/app/theme-provider";
 import {
   demoAnnouncements, demoAssignments, demoNotifications, demoStudents, roleMetrics
 } from "@/lib/demo-data";
@@ -27,6 +28,8 @@ type NavGroup = { title: string; items: NavItem[] };
 type ModalKind = "assignment" | "announcement" | "attendance";
 type ClassOption = { id: string; name: string };
 type SubjectOption = { id: string; name: string };
+type WorkspaceMetric = { label: string; value: string; delta: string; tone: string; icon: string };
+type WorkspaceNotification = { id: string; title: string; body: string; created_at: string; read_at: string | null; timeLabel?: string };
 
 const navigation: Record<AppRole, NavGroup[]> = {
   admin: [
@@ -152,7 +155,7 @@ function formatRelativeDate(value: string) {
   return `Due in ${days} days`;
 }
 
-function MetricCard({ metric }: { metric: (typeof roleMetrics)[AppRole][number] }) {
+function MetricCard({ metric }: { metric: WorkspaceMetric }) {
   const Icon = iconByMetric[metric.icon] ?? Activity;
   const footClass = metric.tone === "amber" ? "metric-foot warning" : metric.tone === "green" ? "metric-foot positive" : "metric-foot";
   return (
@@ -194,9 +197,10 @@ function AttendanceChart() {
 }
 
 function Dashboard({
-  role, name, students, assignments, announcements, tasks, onTaskToggle, onNavigate, onCreate
+  role, name, students, assignments, announcements, tasks, onTaskToggle, onNavigate, onCreate, demoMode
 }: {
   role: AppRole;
+  demoMode: boolean;
   name: string;
   students: StudentRow[];
   assignments: AssignmentRow[];
@@ -206,11 +210,16 @@ function Dashboard({
   onNavigate: (view: ViewKey) => void;
   onCreate: (kind: ModalKind) => void;
 }) {
-  const metrics = roleMetrics[role];
+  const metrics: WorkspaceMetric[] = demoMode ? [...roleMetrics[role]] : [
+    { label: "Students loaded", value: String(students.length), delta: "Records visible to this account", tone: "blue", icon: "users" },
+    { label: "Assignments loaded", value: String(assignments.length), delta: "Records visible to this account", tone: "amber", icon: "pending" },
+    { label: "Announcements", value: String(announcements.length), delta: "Published items visible to this account", tone: "violet", icon: "inbox" },
+    { label: "Live data", value: "Connected", delta: "Metrics use permitted database records", tone: "green", icon: "check" },
+  ];
   const greet = role === "parent" ? "Good afternoon" : "Good afternoon";
   const actions: { title: string; detail: string; icon: LucideIcon; view: ViewKey; kind?: ModalKind }[] = role === "admin"
     ? [
-      { title: "Add student", detail: "Student records", icon: UserPlus, view: "students" },
+      { title: "Manage students", detail: "Review permitted records", icon: UserPlus, view: "students" },
       { title: "Start attendance", detail: "Class check-in", icon: CalendarCheck, view: "attendance", kind: "attendance" },
       { title: "Create announcement", detail: "School-wide update", icon: MessageSquare, view: "communication", kind: "announcement" },
       { title: "View reports", detail: "School insights", icon: BarChart3, view: "reports" },
@@ -256,26 +265,26 @@ function Dashboard({
         <div>
           <section className="panel">
             <div className="panel-header"><div><h2 className="panel-title">{role === "student" ? "My learning rhythm" : role === "parent" ? "Attendance overview" : "Attendance overview"}</h2><p className="panel-subtitle">{role === "student" ? "Your attendance and consistency over time" : "A weekly view of school attendance"}</p></div><select className="period-select" aria-label="Attendance time period" defaultValue="week"><option value="week">This week</option><option value="month">This month</option><option value="term">This term</option></select></div>
-            <AttendanceChart />
+            {demoMode ? <AttendanceChart /> : <div className="inline-empty">Attendance analytics will appear after verified attendance records are entered for this school.</div>}
           </section>
           <section className="panel">
             <div className="panel-header"><div><h2 className="panel-title">{role === "student" ? "Upcoming deadlines" : role === "parent" ? "Child's learning tasks" : role === "homeroom_teacher" ? "Students to follow up" : "Priority actions"}</h2><p className="panel-subtitle">Items that may need your attention</p></div><button className="panel-link" onClick={() => onNavigate(role === "student" || role === "parent" ? "assignments" : "attendance")}>View all <ArrowRight size={13} /></button></div>
             {role === "student" || role === "parent" ? (
-              <div className="task-list">{assignments.slice(0,3).map((a) => <div className="task-item" key={a.id}><div className="task-check"><FileCheck size={11} /></div><div className="task-copy"><strong>{a.title}</strong><span>{a.class_name || "Class assignment"} · {formatRelativeDate(a.due_at)}</span></div><span className={`status-pill ${a.status === "Draft" ? "gray" : "amber"}`}>{a.status}</span></div>)}</div>
-            ) : (
+              <div className="task-list">{assignments.slice(0,3).map((a) => <div className="task-item" key={a.id}><div className="task-check"><FileCheck size={11} /></div><div className="task-copy"><strong>{a.title}</strong><span>{a.class_name || "Class assignment"} · {formatRelativeDate(a.due_at)}</span></div><span className={`status-pill ${a.status === "Draft" ? "gray" : "amber"}`}>{a.status}</span></div>)}{assignments.length === 0 && <div className="inline-empty">No assignments are currently visible to this account.</div>}</div>
+            ) : demoMode ? (
               <div className="task-list">{tasks.map((task) => <div className="task-item" key={task.id}><button className={`task-check ${task.done ? "done" : ""}`} onClick={() => onTaskToggle(task.id)} aria-label={task.done ? "Mark task incomplete" : "Mark task complete"}>{task.done && <Check size={11} />}</button><div className="task-copy"><strong>{task.title}</strong><span>{task.note}</span></div><span className={`status-pill ${task.priority}`}>{task.done ? "Done" : "Action"}</span></div>)}</div>
-            )}
+            ) : <div className="inline-empty">No workflow tasks are available yet. Task completion is not simulated in live mode.</div>}
           </section>
         </div>
 
         <div>
           <section className="panel">
-            <div className="panel-header"><div><h2 className="panel-title">{role === "student" ? "Today's timetable" : role === "parent" ? "Today's school day" : "Today's schedule"}</h2><p className="panel-subtitle">Tuesday, 10 November 2026</p></div><button className="panel-link" onClick={() => onNavigate("classes")}>Full schedule <ArrowRight size={13} /></button></div>
-            <div className="schedule-list">{schedule.map((item) => <div className="schedule-item" key={item.time}><span className="schedule-time">{item.time}</span><i className={`schedule-line ${item.tone}`} /><div className="schedule-copy"><strong>{item.subject}</strong><span>{item.detail}</span></div><span className="schedule-room">{item.room}</span></div>)}</div>
+            <div className="panel-header"><div><h2 className="panel-title">{role === "student" ? "Today's timetable" : role === "parent" ? "Today's school day" : "Today's schedule"}</h2><p className="panel-subtitle">{new Intl.DateTimeFormat("en-GB", { dateStyle: "full" }).format(new Date())}</p></div><button className="panel-link" onClick={() => onNavigate("classes")}>Full schedule <ArrowRight size={13} /></button></div>
+            {demoMode ? <div className="schedule-list">{schedule.map((item) => <div className="schedule-item" key={item.time}><span className="schedule-time">{item.time}</span><i className={`schedule-line ${item.tone}`} /><div className="schedule-copy"><strong>{item.subject}</strong><span>{item.detail}</span></div><span className="schedule-room">{item.room}</span></div>)}</div> : <div className="inline-empty">A verified timetable has not been configured for this school yet.</div>}
           </section>
           <section className="panel">
             <div className="panel-header"><div><h2 className="panel-title">Quick actions</h2><p className="panel-subtitle">Go straight to a common task</p></div><Sparkles size={16} color="#8a9bb5" /></div>
-            <div className="quick-action-grid">{actions.map((action) => { const Icon = action.icon; return <button key={action.title} className="quick-action" onClick={() => action.kind ? onCreate(action.kind) : onNavigate(action.view)}><span className="quick-action-icon"><Icon size={16} /></span><span><strong>{action.title}</strong><span>{action.detail}</span></span></button>; })}</div>
+            <div className="quick-action-grid">{(demoMode ? actions : actions.filter((action) => action.kind !== "attendance")).map((action) => { const Icon = action.icon; return <button key={action.title} className="quick-action" onClick={() => action.kind ? onCreate(action.kind) : onNavigate(action.view)}><span className="quick-action-icon"><Icon size={16} /></span><span><strong>{action.title}</strong><span>{action.detail}</span></span></button>; })}</div>
           </section>
           <section className="panel">
             <div className="panel-header"><div><h2 className="panel-title">School announcements</h2><p className="panel-subtitle">Latest updates from your school</p></div><button className="panel-link" onClick={() => onNavigate("communication")}>See all <ArrowRight size={13} /></button></div>
@@ -292,7 +301,7 @@ function Dashboard({
 function StudentTable({ rows }: { rows: StudentRow[] }) {
   return (
     <section className="panel table-panel">
-      <div className="panel-header"><div><h2 className="panel-title">Student directory</h2><p className="panel-subtitle">{rows.length} records in the current view</p></div><div className="table-tools"><button className="secondary-button" disabled><Filter size={14} /> Filter</button><button className="secondary-button" disabled><Download size={14} /> Export</button></div></div>
+      <div className="panel-header"><div><h2 className="panel-title">Student directory</h2><p className="panel-subtitle">{rows.length} records in the current view</p></div></div>
       <div className="table-wrap"><table className="data-table"><thead><tr><th>Student</th><th>Student ID</th><th>Year</th><th>Class</th><th>Attendance</th><th>Status</th></tr></thead><tbody>{rows.map((student) => <tr key={student.id}><td><div className="table-person"><span className="mini-avatar">{initials(student.first_name + " " + student.last_name)}</span><div><strong>{student.first_name} {student.last_name}</strong><span>Student profile</span></div></div></td><td>{student.student_code}</td><td>{student.grade_level}</td><td>{student.class_name || "—"}</td><td><span className={`status-pill ${student.attendance === "Absent" ? "red" : student.attendance === "Late" ? "amber" : "green"}`}>{student.attendance || "—"}</span></td><td><span className="status-pill green">{student.status || "Active"}</span></td></tr>)}</tbody></table>{rows.length === 0 && <div className="table-empty">No student records match this search.</div>}</div>
     </section>
   );
@@ -322,6 +331,17 @@ function ModuleView({
 }) {
   if (view === "tcas-learning") return <TcasLearningModule role={role} demoMode={demoMode} />;
   if (view === "tcas") return <TcasModule role={role} demoMode={demoMode} />;
+  if (!demoMode && ["attendance", "teachers", "classes", "grades", "reports", "finance"].includes(view)) {
+    const liveNotices: Partial<Record<ViewKey, string>> = {
+      attendance: "Attendance sessions and status marking are not yet available as a complete workflow. No sample attendance totals are shown in live mode.",
+      teachers: "The live teacher directory and administrator-led account provisioning workflow are not yet connected to this view.",
+      classes: "Class and subject records are used by permitted assignment workflows, but a complete live management view is not yet available.",
+      grades: "Verified grade records are not yet connected to this view. No illustrative GPA or score is shown as a real result.",
+      reports: "Reports will appear after attendance, academic and operational records have been populated and validated.",
+      finance: "Live invoices and payment reconciliation are not yet enabled. No sample balance is shown as a real account balance.",
+    };
+    return <><div className="page-heading"><div><div className="breadcrumb">Live school data</div><h1>{pageCopy[view].title}</h1><p>{pageCopy[view].description}</p></div></div><section className="panel"><div className="section-note" role="status"><ShieldCheck size={17}/><span>{liveNotices[view]}</span></div><div className="inline-empty">This module is not enabled for operational use yet. Existing records are not replaced with demo data.</div></section></>;
+  }
   const filteredStudents = students.filter((s) => `${s.first_name} ${s.last_name} ${s.student_code} ${s.class_name}`.toLowerCase().includes(query.toLowerCase()));
   const filteredAssignments = assignments.filter((a) => `${a.title} ${a.class_name}`.toLowerCase().includes(query.toLowerCase()));
   if (view === "students") return <><div className="page-heading"><div><div className="breadcrumb">School management</div><h1>{pageCopy.students.title}</h1><p>{pageCopy.students.description}</p></div><div className="heading-actions"><button className="primary-button" onClick={() => onNavigate("settings")}><Plus size={15} /> Account provisioning</button></div></div><div className="section-note"><ShieldCheck size={17} /><span>Student records are protected by relationship-aware access policies. Creating a student requires a provisioned account and an authorized school administrator.</span></div><div style={{ height: 15 }} /><StudentTable rows={filteredStudents} /></>;
@@ -357,10 +377,13 @@ export function Workspace({
   const [toast, setToast] = useState("");
   const [modalKind, setModalKind] = useState<ModalKind | null>(null);
   const [busy, setBusy] = useState(false);
-  const [students, setStudents] = useState<StudentRow[]>(demoStudents);
-  const [assignments, setAssignments] = useState<AssignmentRow[]>(demoAssignments);
-  const [announcements, setAnnouncements] = useState<AnnouncementRow[]>(demoAnnouncements);
-  const [tasks, setTasks] = useState(baseTasks);
+  const [students, setStudents] = useState<StudentRow[]>(demoMode ? demoStudents : []);
+  const [assignments, setAssignments] = useState<AssignmentRow[]>(demoMode ? demoAssignments : []);
+  const [announcements, setAnnouncements] = useState<AnnouncementRow[]>(demoMode ? demoAnnouncements : []);
+  const [notifications, setNotifications] = useState<WorkspaceNotification[]>(demoMode ? demoNotifications.map((item) => ({ id: item.id, title: item.title, body: item.detail, created_at: new Date().toISOString(), read_at: item.unread ? null : new Date().toISOString(), timeLabel: item.time })) : []);
+  const [isLoading, setIsLoading] = useState(!demoMode);
+  const [loadError, setLoadError] = useState("");
+  const [tasks, setTasks] = useState(demoMode ? baseTasks : []);
   const [classes, setClasses] = useState<ClassOption[]>([]);
   const [subjects, setSubjects] = useState<SubjectOption[]>([]);
   const [draftTitle, setDraftTitle] = useState("");
@@ -383,14 +406,19 @@ export function Workspace({
 
     async function load() {
       if (!supabase) return;
-      const [studentResult, assignmentResult, announcementResult, classResult, subjectResult] = await Promise.all([
+      try {
+      const [studentResult, assignmentResult, announcementResult, classResult, subjectResult, notificationResult] = await Promise.all([
         supabase.from("students").select("id, student_code, first_name, last_name, grade_level, status, class_id, classes(name)").limit(60),
         supabase.from("assignments").select("id, title, due_at, status, classes(name)").order("due_at", { ascending: true }).limit(60),
         supabase.from("announcements").select("id, title, body, published_at, audience").eq("status", "published").order("published_at", { ascending: false }).limit(12),
         supabase.from("classes").select("id, name").order("name").limit(100),
         supabase.from("subjects").select("id, name").order("name").limit(100),
+        supabase.from("notifications").select("id, title, body, created_at, read_at").order("created_at", { ascending: false }).limit(10),
       ]);
       if (cancelled) return;
+      const failedQueries = [studentResult, assignmentResult, announcementResult, classResult, subjectResult, notificationResult].filter((result) => result.error);
+      if (failedQueries.length) setLoadError("Some school data could not be loaded. Refresh or contact the administrator if the problem continues.");
+      else setLoadError("");
 
       if (studentResult.data) setStudents(studentResult.data.map((row) => ({
         id: row.id,
@@ -418,6 +446,14 @@ export function Workspace({
       })));
       if (classResult.data) setClasses(classResult.data);
       if (subjectResult.data) setSubjects(subjectResult.data);
+      if (notificationResult.data) setNotifications(notificationResult.data.map((item) => ({
+        id: item.id, title: item.title, body: item.body, created_at: item.created_at, read_at: item.read_at,
+      })));
+      } catch {
+        if (!cancelled) setLoadError("The school data service could not be reached. Check the connection and try again.");
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
     }
 
     void load();
@@ -539,13 +575,16 @@ export function Workspace({
   }
 
   async function markAllNotificationsRead() {
+    const readAt = new Date().toISOString();
     if (!demoMode) {
       const supabase = createClient();
-      if (supabase) {
-        const { data } = await supabase.auth.getUser();
-        if (data.user) await supabase.from("notifications").update({ read_at: new Date().toISOString() }).eq("user_id", data.user.id).is("read_at", null);
-      }
+      if (!supabase) { setToast("Notification service is unavailable."); return; }
+      const { data, error } = await supabase.auth.getUser();
+      if (error || !data.user) { setToast("Your session could not be verified."); return; }
+      const { error: updateError } = await supabase.from("notifications").update({ read_at: readAt }).eq("user_id", data.user.id).is("read_at", null);
+      if (updateError) { setToast("Notifications could not be updated. Please try again."); return; }
     }
+    setNotifications((current) => current.map((item) => ({ ...item, read_at: item.read_at ?? readAt })));
     setNotificationsOpen(false);
     setToast("Notifications marked as read.");
   }
@@ -557,22 +596,30 @@ export function Workspace({
   function exportCurrentData() {
     const rows = activeView === "students" ? students
       : activeView === "assignments" ? assignments
-        : announcements;
-    const csv = [Object.keys(rows[0] ?? {}).join(","), ...rows.map((row) =>
-      Object.values(row).map((value) => `"${String(value ?? "").replaceAll('"', '""')}"`).join(",")
-    )].join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+        : activeView === "communication" ? announcements : null;
+    if (!rows) { setToast("Export is not available for this section yet."); return; }
+    if (rows.length === 0) { setToast("There are no records to export."); return; }
+    const csvCell = (value: unknown) => {
+      const raw = String(value ?? "");
+      const safe = /^[\\s]*[=+\\-@]/.test(raw) ? `'${raw}` : raw;
+      return `"${safe.replaceAll('"', '""')}"`;
+    };
+    const csv = [Object.keys(rows[0]).map(csvCell).join(","), ...rows.map((row) =>
+      Object.values(row).map(csvCell).join(",")
+    )].join("\r\n");
+    const blob = new Blob(["\\uFEFF", csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
     anchor.download = `rnmcom-${activeView}.csv`;
     anchor.click();
-    URL.revokeObjectURL(url);
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
     setToast("CSV export prepared.");
   }
 
   const currentNav = navGroups.flatMap((group) => group.items).find((item) => item.key === activeView);
-  const unreadCount = demoNotifications.filter((item) => item.unread).length;
+  const unreadCount = notifications.filter((item) => !item.read_at).length;
+  const { theme, toggleTheme } = useTheme();
   const visibleStudents = useMemo(() => students.filter((s) =>
     `${s.first_name} ${s.last_name} ${s.student_code}`.toLowerCase().includes(search.toLowerCase())
   ), [students, search]);
@@ -593,12 +640,13 @@ export function Workspace({
         <header className="topbar">
           <div className="topbar-left">
             <button className="topbar-action mobile-menu-button" aria-label="Open navigation" onClick={() => setSidebarOpen(true)}><Menu size={19} /></button>
-            <label className="search-box"><Search size={16} /><input aria-label="Search this workspace" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search students, assignments..." /><span className="search-shortcut">⌘ K</span></label>
+            <label className="search-box"><Search size={16} /><input aria-label="Search visible students and assignments" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search visible students or assignments..." /></label>
           </div>
           <div className="topbar-right">
             {demoMode && <span className="status-pill amber">Demo</span>}
             {allRoles.length > 1 && <select className="role-select" aria-label="Switch workspace role" value={role} onChange={(e) => { const next = e.target.value; if (isAppRole(next) && allRoles.includes(next)) { setRole(next); setActiveView("overview"); } }}><option value="" disabled>Switch role</option>{allRoles.map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}</select>}
-            <div className="popover-anchor"><button className="topbar-action" aria-label="Notifications" aria-expanded={notificationsOpen} onClick={() => { setNotificationsOpen(!notificationsOpen); setProfileOpen(false); }}><Bell size={18} />{unreadCount > 0 && <i className="notification-dot" />}</button>{notificationsOpen && <div className="dropdown-panel"><div className="dropdown-head"><div><strong>Notifications</strong><span> {unreadCount} unread</span></div><button className="text-button" onClick={markAllNotificationsRead}>Mark all read</button></div>{demoNotifications.map((item) => <div className={`notification-item ${item.unread ? "unread" : ""}`} key={item.id}>{item.unread && <i className="notification-bullet" />}<div><strong>{item.title}</strong><p>{item.detail}</p><span>{item.time}</span></div></div>)}</div>}</div>
+            <button className="topbar-action theme-toggle" type="button" aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} title={theme === "dark" ? "Light mode" : "Dark mode"} onClick={toggleTheme}>{theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}</button>
+            <div className="popover-anchor"><button className="topbar-action" aria-label="Notifications" aria-expanded={notificationsOpen} onClick={() => { setNotificationsOpen(!notificationsOpen); setProfileOpen(false); }}><Bell size={18} />{unreadCount > 0 && <i className="notification-dot" />}</button>{notificationsOpen && <div className="dropdown-panel"><div className="dropdown-head"><div><strong>Notifications</strong><span> {unreadCount} unread</span></div><button className="text-button" onClick={markAllNotificationsRead} disabled={unreadCount === 0}>Mark all read</button></div>{notifications.length === 0 ? <div className="inline-empty">No notifications yet.</div> : notifications.map((item) => <div className={`notification-item ${!item.read_at ? "unread" : ""}`} key={item.id}>{!item.read_at && <i className="notification-bullet" />}<div><strong>{item.title}</strong><p>{item.body}</p><span>{item.timeLabel || formatDate(item.created_at)}</span></div></div>)}</div>}</div>
             <div className="top-divider" />
             <div className="popover-anchor"><button className="profile-trigger" onClick={() => { setProfileOpen(!profileOpen); setNotificationsOpen(false); }} aria-expanded={profileOpen}><span className="avatar">{initials(profileName)}</span><span className="profile-copy"><strong>{profileName}</strong><span>{ROLE_LABELS[role]}</span></span><ChevronDown size={14} color="#9aa5b4" /></button>{profileOpen && <div className="dropdown-panel profile-menu"><button onClick={() => { navigate("settings"); setProfileOpen(false); }}><UserRound size={15} /> Profile & preferences</button><button onClick={() => { navigate("settings"); setProfileOpen(false); }}><ShieldCheck size={15} /> Account security</button><button className="danger" onClick={signOut}><LogOut size={15} /> Sign out</button></div>}</div>
           </div>
@@ -606,12 +654,14 @@ export function Workspace({
 
         <main className="content">
           {demoMode && <div className="demo-banner"><AlertCircle size={15} /><strong>Preview environment</strong><span>Sample data only — actions here do not change real school records.</span></div>}
+          {!demoMode && isLoading && <div className="section-note" role="status"><Activity size={16} /> Loading permitted school records…</div>}
+          {!demoMode && loadError && <div className="form-error" role="alert">{loadError}</div>}
           {activeView === "overview"
-            ? <Dashboard role={role} name={profileName} students={students} assignments={assignments} announcements={announcements} tasks={tasks} onTaskToggle={toggleTask} onNavigate={navigate} onCreate={openCreate} />
+            ? <Dashboard role={role} name={profileName} students={students} assignments={assignments} announcements={announcements} tasks={tasks} onTaskToggle={toggleTask} onNavigate={navigate} onCreate={openCreate} demoMode={demoMode} />
             : <ModuleView view={activeView} role={role} students={visibleStudents} assignments={assignments.filter((a) => `${a.title} ${a.class_name}`.toLowerCase().includes(search.toLowerCase()))} announcements={announcements} query={search} onCreate={openCreate} onNavigate={navigate} demoMode={demoMode} />
           }
-          {activeView !== "overview" && activeView !== "settings" && <div className="module-actions" style={{ justifyContent: "flex-end", marginTop: 15 }}><button className="secondary-button" onClick={exportCurrentData}><Download size={14} /> Export visible data</button></div>}
-          <footer className="workspace-footer"><span>RNMCOM · School, connected.</span><span><ShieldCheck size={12} /> Role-aware workspace · {demoMode ? "Demo data" : "Supabase connected"}</span></footer>
+          {["students", "assignments", "communication"].includes(activeView) && <div className="module-actions" style={{ justifyContent: "flex-end", marginTop: 15 }}><button className="secondary-button" onClick={exportCurrentData}><Download size={14} /> Export visible data</button></div>}
+          <footer className="workspace-footer"><span>RNMCOM · School, connected.</span><span><ShieldCheck size={12} /> {demoMode ? "Demo data" : loadError ? "Live data · partial load" : isLoading ? "Live data · loading" : "Live data · connected"}</span></footer>
         </main>
       </div>
 

@@ -346,3 +346,159 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .learn-progress-overview{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:17px 0}.learn-progress-overview>div{padding:15px;border-radius:10px;background:#f6f8fc;text-align:center}.learn-progress-overview strong{display:block;font-size:23px;color:#315fbd}.learn-progress-overview span{font-size:10px;color:#8390a3}.learn-progress-row{display:grid;grid-template-columns:minmax(0,1fr) 45px 100px;align-items:center;gap:12px;padding:13px 0;border-top:1px solid #edf0f5}.learn-progress-row b,.learn-progress-row span{display:block;font-size:10px}.learn-progress-row span{color:#8995a7;margin-top:3px}.learn-progress-row>strong{text-align:right;font-size:10px;color:#315fbd}
 .learn-footer-note{display:flex;align-items:center;gap:8px;margin-top:16px;color:#98a3b2;font-size:10px}
 @media(max-width:800px){.learn-course-grid{grid-template-columns:1fr}.learn-welcome{align-items:flex-start;flex-direction:column}.learn-stat{display:flex;align-items:center;gap:10px}.learn-lesson-row{grid-template-columns:30px minmax(0,1fr) 16px}.learn-lesson-row em{display:none}.learn-word{grid-template-columns:1fr}.learn-word em{grid-column:1}.learn-progress-row{grid-template-columns:minmax(0,1fr) 38px}.learn-progress-row>i{grid-column:1/-1}.learn-clock{font-size:52px}.learn-lesson-actions{align-items:flex-start;flex-direction:column}}
+
+/* RNMCOM appearance system: persisted light/dark theme. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #e7edf7;
+  --muted: #9aa9bd;
+  --muted-strong: #c0cada;
+  --line: #2b3b52;
+  --surface: #172438;
+  --canvas: #0c1523;
+  --blue-soft: #172b4d;
+  --green-soft: #123328;
+  --amber-soft: #392b17;
+  --violet-soft: #2c2447;
+  --red-soft: #3a2028;
+  --shadow: 0 10px 30px rgba(0, 0, 0, .22);
+}
+html[data-theme="dark"], html[data-theme="dark"] body {
+  color: var(--ink);
+  background: var(--canvas);
+}
+html[data-theme="dark"] .sidebar,
+html[data-theme="dark"] .topbar,
+html[data-theme="dark"] .panel,
+html[data-theme="dark"] .metric-card,
+html[data-theme="dark"] .module-card,
+html[data-theme="dark"] .dropdown-panel,
+html[data-theme="dark"] .modal-card,
+html[data-theme="dark"] .learn-lesson,
+html[data-theme="dark"] .learn-timer-panel,
+html[data-theme="dark"] .learn-vocab,
+html[data-theme="dark"] .tcas-panel,
+html[data-theme="dark"] .tcas-question-panel,
+html[data-theme="dark"] .tcas-side-panel,
+html[data-theme="dark"] .tcas-result,
+html[data-theme="dark"] .auth-card {
+  color: var(--ink);
+  background: #142136;
+  border-color: var(--line);
+}
+html[data-theme="dark"] .topbar { background: rgba(20, 33, 54, .94); }
+html[data-theme="dark"] .brand-lockup,
+html[data-theme="dark"] .page-heading h1,
+html[data-theme="dark"] .panel-title,
+html[data-theme="dark"] .metric-value,
+html[data-theme="dark"] .schedule-copy strong,
+html[data-theme="dark"] .task-copy strong,
+html[data-theme="dark"] .announcement-item strong,
+html[data-theme="dark"] .table-person strong,
+html[data-theme="dark"] .module-card h3,
+html[data-theme="dark"] .learn-lesson h2,
+html[data-theme="dark"] .tcas-question-panel h2,
+html[data-theme="dark"] .tcas-panel-title h2,
+html[data-theme="dark"] .tcas-panel-title h3,
+html[data-theme="dark"] .auth-card h1 {
+  color: #e7edf7;
+}
+html[data-theme="dark"] .school-switch,
+html[data-theme="dark"] .help-card,
+html[data-theme="dark"] .search-box,
+html[data-theme="dark"] .role-select,
+html[data-theme="dark"] .period-select,
+html[data-theme="dark"] .secondary-button,
+html[data-theme="dark"] .quick-action,
+html[data-theme="dark"] .profile-menu button,
+html[data-theme="dark"] .learn-course-card,
+html[data-theme="dark"] .learn-lesson-row,
+html[data-theme="dark"] .tcas-option,
+html[data-theme="dark"] .tcas-number-grid button,
+html[data-theme="dark"] .tcas-secondary,
+html[data-theme="dark"] .learn-content,
+html[data-theme="dark"] .learn-progress-overview > div,
+html[data-theme="dark"] .learn-welcome,
+html[data-theme="dark"] .tcas-passage,
+html[data-theme="dark"] .tcas-review,
+html[data-theme="dark"] .tcas-review-answer,
+html[data-theme="dark"] .tcas-review .tcas-explanation {
+  color: #d6e0ed;
+  background: #1a2a41;
+  border-color: #344762;
+}
+html[data-theme="dark"] .data-table th,
+html[data-theme="dark"] .notification-item.unread,
+html[data-theme="dark"] .task-check,
+html[data-theme="dark"] .mini-avatar,
+html[data-theme="dark"] .schedule-line,
+html[data-theme="dark"] .progress-track,
+html[data-theme="dark"] .tcas-progress,
+html[data-theme="dark"] .tcas-scorebar,
+html[data-theme="dark"] .learn-timer-track {
+  background-color: #22334b;
+}
+html[data-theme="dark"] .data-table td,
+html[data-theme="dark"] .data-table th,
+html[data-theme="dark"] .schedule-item,
+html[data-theme="dark"] .task-item,
+html[data-theme="dark"] .announcement-item,
+html[data-theme="dark"] .student-summary,
+html[data-theme="dark"] .learn-word,
+html[data-theme="dark"] .learn-lesson-actions {
+  border-color: #2b3b52;
+}
+html[data-theme="dark"] .nav-link { color: #a9b8cc; }
+html[data-theme="dark"] .nav-link:hover,
+html[data-theme="dark"] .topbar-action:hover,
+html[data-theme="dark"] .quick-action:hover,
+html[data-theme="dark"] .profile-menu button:hover {
+  color: #f2f6fc;
+  background: #20324b;
+}
+html[data-theme="dark"] .nav-link.active,
+html[data-theme="dark"] .learn-tabs button.active {
+  color: #9bbaff;
+  background: #1b3155;
+}
+html[data-theme="dark"] .nav-heading,
+html[data-theme="dark"] .breadcrumb,
+html[data-theme="dark"] .metric-label,
+html[data-theme="dark"] .panel-subtitle,
+html[data-theme="dark"] .page-heading p,
+html[data-theme="dark"] .table-person span,
+html[data-theme="dark"] .announcement-item p,
+html[data-theme="dark"] .schedule-copy span,
+html[data-theme="dark"] .module-card p,
+html[data-theme="dark"] .learn-content p,
+html[data-theme="dark"] .learn-word span,
+html[data-theme="dark"] .tcas-question-panel p {
+  color: #9aa9bd;
+}
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select {
+  color: #e7edf7;
+  background-color: #17263b;
+  border-color: #344762;
+}
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder { color: #8495ad; }
+html[data-theme="dark"] .dropdown-head,
+html[data-theme="dark"] .dropdown-head,
+html[data-theme="dark"] .top-divider { border-color: #2b3b52; }
+html[data-theme="dark"] .tcas-root { color: #e7edf7; }
+html[data-theme="dark"] .learn-welcome h2,
+html[data-theme="dark"] .learn-course-card > strong,
+html[data-theme="dark"] .learn-lesson-row b,
+html[data-theme="dark"] .tcas-review > p,
+html[data-theme="dark"] .learn-word strong { color: #e7edf7; }
+html[data-theme="dark"] .auth-page,
+html[data-theme="dark"] .error-page { background: var(--canvas); color: var(--ink); }
+.theme-toggle { flex: 0 0 auto; }
+@media (max-width: 560px) {
+  .topbar { padding: 0 14px; gap: 8px; }
+  .topbar-right { gap: 6px; }
+  .role-select { max-width: 112px; }
+  .search-box { width: min(48vw, 220px); }
+}
