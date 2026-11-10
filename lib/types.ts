@@ -20,6 +20,7 @@ export type ViewKey =
   | "grades"
   | "communication"
   | "reports"
+  | "audit"
   | "finance"
   | "settings";
 

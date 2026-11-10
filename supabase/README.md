@@ -8,7 +8,7 @@
 - API URL: `https://psgfyujnvidtwvegucnh.supabase.co`
 - Database engine: PostgreSQL 17
 
-The initial schema, policy/performance cleanup, and anonymous-privilege hardening migrations have been applied successfully. All three versioned migration files are kept in `supabase/migrations/` for reproducible setup.
+The initial schema, policy/performance cleanup, TCAS learning/practice migrations and metadata-only audit-event migration have been applied successfully. The versioned migration files are kept in `supabase/migrations/` for reproducible setup.
 
 ## Application configuration
 
@@ -36,13 +36,20 @@ Public self-registration is intentionally not exposed. Never grant the admin rol
 - Student-support records are restricted to administrators and designated homeroom teachers.
 - Browser clients use only the publishable key.
 - Anonymous (`anon`) and `PUBLIC` table/schema grants are revoked; authenticated access is explicitly granted and remains subject to RLS.
-- The Supabase security advisor returned no lints after the migrations.
+- The Supabase security advisor returned no lints after the audit migration.
+- Critical school-data changes are recorded in `audit_logs` by database triggers. The log stores actor, operation, resource type/identifier and changed field names—not copied student/guardian values.
+- Application clients cannot insert, update or delete audit log rows; authenticated administrators retain read access.
 - Duplicate permissive SELECT policy overlaps were removed; foreign-key indexes were added where the advisor identified missing coverage.
+- Separate inspection still identifies `private.tcas_answer_keys` as a table with RLS disabled. Its grants to `anon` and `authenticated` are revoked and the grading RPC is owner-privileged, but the Supabase table inspection continues to flag it. This is a manual security decision and is not silently changed by this migration.
 
 ## Implemented product workflows
 
-The current UI reads permitted student, assignment, class, subject and announcement records, and supports authenticated announcement creation, assignment creation, and attendance-session creation.
+The current UI reads permitted student, assignment, class, subject, announcement and notification records, and supports authenticated announcement creation, assignment creation and attendance-session creation. Attendance session creation does not yet complete the attendance register; the live attendance UI is intentionally gated until marking and review are implemented.
 
-## Not yet production-complete
+## Production readiness gate
 
-Attendance marking, QR token issuance/expiry, student file uploads/submissions, teacher grading workflows, direct messaging, push delivery, full payment collection/reconciliation, complete report generation, and automated operational audit events require further implementation and school acceptance testing. Do not use the platform as the live student system until these workflows, account permissions, privacy notices, backups, and operational procedures have been validated.
+The connected database was inspected on 10 November 2026. The core school tables currently contain zero profiles, roles, students, teachers, classes, subjects, attendance sessions, attendance records, assignments, submissions, grades, announcements, notifications and guardian links. The project is healthy, but it is not populated with operational school data. Do not turn off Demo Mode or invite students yet.
+
+The Supabase table inspection also reports `private.tcas_answer_keys` with RLS disabled. Direct `anon` and `authenticated` table grants are revoked, and the grading function accesses the table through a restricted owner-privileged RPC. The advisor finding remains visible for a human security decision; do not expose this schema or grant client access.
+
+Attendance marking/corrections/approval, QR token issuance/expiry, student file uploads/submissions, teacher grading/feedback, administrator-led user provisioning, direct messaging, push delivery/read receipts, guardian multi-child workflows, full payment collection/reconciliation, complete report generation, backups/restore drills, privacy notices, PDPA review and operational incident procedures still require implementation and school acceptance testing. See `docs/QA-PRODUCTION-READINESS.md`.
