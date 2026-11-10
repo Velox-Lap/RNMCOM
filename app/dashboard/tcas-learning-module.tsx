@@ -1,6 +1,6 @@
 "use client";
 import { useCallback,useEffect,useMemo,useState } from "react";
-import { BookOpen,CheckCircle2,ChevronLeft,Clock3,GraduationCap,Library,Pause,Play,Search,Sparkles,Target,Timer,Trophy } from "lucide-react";
+import { BookOpen,CheckCircle2,ChevronLeft,ChevronRight,Clock3,GraduationCap,Library,Pause,Play,Search,Sparkles,Target,Timer,Trophy } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { AppRole } from "@/lib/types";
 type Course={id:string;slug:string;code:string;title:string;description:string;exam_group:string};
