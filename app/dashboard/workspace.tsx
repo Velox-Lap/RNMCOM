@@ -11,6 +11,7 @@ import {
   Wallet, X, UserRound, ClipboardList, FileText, UserPlus
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { TcasModule } from "@/app/dashboard/tcas-module";
 import { createClient } from "@/lib/supabase/client";
 import {
   demoAnnouncements, demoAssignments, demoNotifications, demoStudents, roleMetrics
@@ -35,6 +36,7 @@ const navigation: Record<AppRole, NavGroup[]> = {
       { key: "classes", label: "Classes & subjects", icon: GraduationCap },
     ] },
     { title: "Operations", items: [
+      { key: "tcas", label: "TCAS Practice", icon: GraduationCap },
       { key: "attendance", label: "Attendance", icon: CalendarCheck, badge: "8" },
       { key: "assignments", label: "Assignments", icon: ClipboardList },
       { key: "communication", label: "Communication", icon: MessageSquare },
@@ -49,6 +51,7 @@ const navigation: Record<AppRole, NavGroup[]> = {
   teacher: [
     { title: "Workspace", items: [{ key: "overview", label: "Overview", icon: LayoutDashboard }] },
     { title: "Teaching", items: [
+      { key: "tcas", label: "TCAS Practice", icon: GraduationCap },
       { key: "classes", label: "My classes", icon: GraduationCap },
       { key: "attendance", label: "Attendance", icon: CalendarCheck, badge: "3" },
       { key: "assignments", label: "Assignments", icon: ClipboardList, badge: "6" },
@@ -70,6 +73,7 @@ const navigation: Record<AppRole, NavGroup[]> = {
   student: [
     { title: "My workspace", items: [{ key: "overview", label: "Overview", icon: LayoutDashboard }] },
     { title: "Learning", items: [
+      { key: "tcas", label: "TCAS Practice", icon: GraduationCap },
       { key: "assignments", label: "My assignments", icon: ClipboardList, badge: "3" },
       { key: "grades", label: "Grades & progress", icon: BookOpen },
       { key: "attendance", label: "Attendance history", icon: CalendarCheck },
@@ -91,6 +95,7 @@ const navigation: Record<AppRole, NavGroup[]> = {
 };
 
 const pageCopy: Record<ViewKey, { title: string; description: string }> = {
+  tcas: { title: "TCAS Practice", description: "Timed entrance-exam practice with scoring and explanations." },
   overview: { title: "Overview", description: "Your school workspace at a glance." },
   students: { title: "Students", description: "Manage student records and keep essential information in context." },
   teachers: { title: "Teachers & staff", description: "Review school staffing and teaching assignments." },
@@ -298,7 +303,7 @@ function AssignmentTable({ rows }: { rows: AssignmentRow[] }) {
 }
 
 function ModuleView({
-  view, role, students, assignments, announcements, query, onCreate, onNavigate
+  view, role, students, assignments, announcements, query, onCreate, onNavigate, demoMode
 }: {
   view: ViewKey;
   role: AppRole;
@@ -308,7 +313,9 @@ function ModuleView({
   query: string;
   onCreate: (kind: ModalKind) => void;
   onNavigate: (view: ViewKey) => void;
+  demoMode: boolean;
 }) {
+  if (view === "tcas") return <TcasModule role={role} demoMode={demoMode} />;
   const filteredStudents = students.filter((s) => `${s.first_name} ${s.last_name} ${s.student_code} ${s.class_name}`.toLowerCase().includes(query.toLowerCase()));
   const filteredAssignments = assignments.filter((a) => `${a.title} ${a.class_name}`.toLowerCase().includes(query.toLowerCase()));
   if (view === "students") return <><div className="page-heading"><div><div className="breadcrumb">School management</div><h1>{pageCopy.students.title}</h1><p>{pageCopy.students.description}</p></div><div className="heading-actions"><button className="primary-button" onClick={() => onNavigate("settings")}><Plus size={15} /> Account provisioning</button></div></div><div className="section-note"><ShieldCheck size={17} /><span>Student records are protected by relationship-aware access policies. Creating a student requires a provisioned account and an authorized school administrator.</span></div><div style={{ height: 15 }} /><StudentTable rows={filteredStudents} /></>;
@@ -595,7 +602,7 @@ export function Workspace({
           {demoMode && <div className="demo-banner"><AlertCircle size={15} /><strong>Preview environment</strong><span>Sample data only — actions here do not change real school records.</span></div>}
           {activeView === "overview"
             ? <Dashboard role={role} name={profileName} students={students} assignments={assignments} announcements={announcements} tasks={tasks} onTaskToggle={toggleTask} onNavigate={navigate} onCreate={openCreate} />
-            : <ModuleView view={activeView} role={role} students={visibleStudents} assignments={assignments.filter((a) => `${a.title} ${a.class_name}`.toLowerCase().includes(search.toLowerCase()))} announcements={announcements} query={search} onCreate={openCreate} onNavigate={navigate} />
+            : <ModuleView view={activeView} role={role} students={visibleStudents} assignments={assignments.filter((a) => `${a.title} ${a.class_name}`.toLowerCase().includes(search.toLowerCase()))} announcements={announcements} query={search} onCreate={openCreate} onNavigate={navigate} demoMode={demoMode} />
           }
           {activeView !== "overview" && activeView !== "settings" && <div className="module-actions" style={{ justifyContent: "flex-end", marginTop: 15 }}><button className="secondary-button" onClick={exportCurrentData}><Download size={14} /> Export visible data</button></div>}
           <footer className="workspace-footer"><span>RNMCOM · School, connected.</span><span><ShieldCheck size={12} /> Role-aware workspace · {demoMode ? "Demo data" : "Supabase connected"}</span></footer>
