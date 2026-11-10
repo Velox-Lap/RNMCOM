@@ -8,7 +8,7 @@
 - API URL: `https://psgfyujnvidtwvegucnh.supabase.co`
 - Database engine: PostgreSQL 17
 
-The initial schema and policy/performance cleanup migrations have been applied successfully. Both migration files are kept in `supabase/migrations/` for reproducible setup.
+The initial schema, policy/performance cleanup, and anonymous-privilege hardening migrations have been applied successfully. All three versioned migration files are kept in `supabase/migrations/` for reproducible setup.
 
 ## Application configuration
 
@@ -30,11 +30,12 @@ Public self-registration is intentionally not exposed. Never grant the admin rol
 
 ## Security model
 
-- All 20 exposed public application tables have RLS enabled.
+- All 21 exposed public application tables have RLS enabled.
 - Roles are read from `user_roles`, not user-editable metadata.
 - Guardian access requires an explicit relationship row and per-domain permission flags.
 - Student-support records are restricted to administrators and designated homeroom teachers.
 - Browser clients use only the publishable key.
+- Anonymous (`anon`) and `PUBLIC` table/schema grants are revoked; authenticated access is explicitly granted and remains subject to RLS.
 - The Supabase security advisor returned no lints after the migrations.
 - Duplicate permissive SELECT policy overlaps were removed; foreign-key indexes were added where the advisor identified missing coverage.
 
