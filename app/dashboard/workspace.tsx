@@ -601,7 +601,7 @@ export function Workspace({
     if (rows.length === 0) { setToast("There are no records to export."); return; }
     const csvCell = (value: unknown) => {
       const raw = String(value ?? "");
-      const safe = /^\\s*(?:=|\\+|-|@)/.test(raw) ? `'${raw}` : raw;
+      const safe = ["=", "+", "-", "@"].some((prefix) => raw.trimStart().startsWith(prefix)) ? `'${raw}` : raw;
       return `"${safe.replaceAll('"', '""')}"`;
     };
     const csv = [Object.keys(rows[0]).map(csvCell).join(","), ...rows.map((row) =>
