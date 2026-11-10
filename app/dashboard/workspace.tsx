@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { TcasModule } from "@/app/dashboard/tcas-module";
+import { TcasLearningModule } from "@/app/dashboard/tcas-learning-module";
 import { createClient } from "@/lib/supabase/client";
 import {
   demoAnnouncements, demoAssignments, demoNotifications, demoStudents, roleMetrics
@@ -36,6 +37,7 @@ const navigation: Record<AppRole, NavGroup[]> = {
       { key: "classes", label: "Classes & subjects", icon: GraduationCap },
     ] },
     { title: "Operations", items: [
+      { key: "tcas-learning", label: "TCAS Learning", icon: BookOpen },
       { key: "tcas", label: "TCAS Practice", icon: GraduationCap },
       { key: "attendance", label: "Attendance", icon: CalendarCheck, badge: "8" },
       { key: "assignments", label: "Assignments", icon: ClipboardList },
@@ -51,6 +53,7 @@ const navigation: Record<AppRole, NavGroup[]> = {
   teacher: [
     { title: "Workspace", items: [{ key: "overview", label: "Overview", icon: LayoutDashboard }] },
     { title: "Teaching", items: [
+      { key: "tcas-learning", label: "TCAS Learning", icon: BookOpen },
       { key: "tcas", label: "TCAS Practice", icon: GraduationCap },
       { key: "classes", label: "My classes", icon: GraduationCap },
       { key: "attendance", label: "Attendance", icon: CalendarCheck, badge: "3" },
@@ -73,6 +76,7 @@ const navigation: Record<AppRole, NavGroup[]> = {
   student: [
     { title: "My workspace", items: [{ key: "overview", label: "Overview", icon: LayoutDashboard }] },
     { title: "Learning", items: [
+      { key: "tcas-learning", label: "TCAS Learning", icon: BookOpen },
       { key: "tcas", label: "TCAS Practice", icon: GraduationCap },
       { key: "assignments", label: "My assignments", icon: ClipboardList, badge: "3" },
       { key: "grades", label: "Grades & progress", icon: BookOpen },
@@ -95,6 +99,7 @@ const navigation: Record<AppRole, NavGroup[]> = {
 };
 
 const pageCopy: Record<ViewKey, { title: string; description: string }> = {
+  "tcas-learning": { title: "TCAS Learning", description: "Structured lessons, vocabulary, focused study sessions and learning progress." },
   tcas: { title: "TCAS Practice", description: "Timed entrance-exam practice with scoring and explanations." },
   overview: { title: "Overview", description: "Your school workspace at a glance." },
   students: { title: "Students", description: "Manage student records and keep essential information in context." },
@@ -315,6 +320,7 @@ function ModuleView({
   onNavigate: (view: ViewKey) => void;
   demoMode: boolean;
 }) {
+  if (view === "tcas-learning") return <TcasLearningModule role={role} demoMode={demoMode} />;
   if (view === "tcas") return <TcasModule role={role} demoMode={demoMode} />;
   const filteredStudents = students.filter((s) => `${s.first_name} ${s.last_name} ${s.student_code} ${s.class_name}`.toLowerCase().includes(query.toLowerCase()));
   const filteredAssignments = assignments.filter((a) => `${a.title} ${a.class_name}`.toLowerCase().includes(query.toLowerCase()));
