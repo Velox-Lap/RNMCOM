@@ -9,6 +9,7 @@ export const APP_ROLES = [
 export type AppRole = (typeof APP_ROLES)[number];
 
 export type ViewKey =
+  | "tcas"
   | "overview"
   | "students"
   | "teachers"
