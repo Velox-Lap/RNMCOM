@@ -499,19 +499,34 @@ create policy "attendance_records_insert_staff" on public.attendance_records for
 with check (
   recorded_by = (select auth.uid())
   and exists (
-    select 1 from public.attendance_sessions ses
+    select 1
+    from public.attendance_sessions ses
+    join public.students s on s.class_id = ses.class_id
     where ses.id = session_id
+      and s.id = student_id
       and (private.has_role('admin') or (private.has_role('teacher') and ses.teacher_id = (select auth.uid())))
   )
 );
 create policy "attendance_records_update_staff" on public.attendance_records for update to authenticated
 using (
-  private.has_role('admin')
-  or exists (select 1 from public.attendance_sessions ses where ses.id = session_id and ses.teacher_id = (select auth.uid()) and private.has_role('teacher'))
+  exists (
+    select 1
+    from public.attendance_sessions ses
+    join public.students s on s.class_id = ses.class_id
+    where ses.id = session_id
+      and s.id = student_id
+      and (private.has_role('admin') or (private.has_role('teacher') and ses.teacher_id = (select auth.uid())))
+  )
 )
 with check (
-  private.has_role('admin')
-  or exists (select 1 from public.attendance_sessions ses where ses.id = session_id and ses.teacher_id = (select auth.uid()) and private.has_role('teacher'))
+  exists (
+    select 1
+    from public.attendance_sessions ses
+    join public.students s on s.class_id = ses.class_id
+    where ses.id = session_id
+      and s.id = student_id
+      and (private.has_role('admin') or (private.has_role('teacher') and ses.teacher_id = (select auth.uid())))
+  )
 );
 
 -- Academic work.
