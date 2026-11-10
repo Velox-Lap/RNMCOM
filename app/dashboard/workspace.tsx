@@ -369,6 +369,7 @@ export function Workspace({
     let cancelled = false;
 
     async function load() {
+      if (!supabase) return;
       const [studentResult, assignmentResult, announcementResult, classResult, subjectResult] = await Promise.all([
         supabase.from("students").select("id, student_code, first_name, last_name, grade_level, status, class_id, classes(name)").limit(60),
         supabase.from("assignments").select("id, title, due_at, status, classes(name)").order("due_at", { ascending: true }).limit(60),
