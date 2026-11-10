@@ -7,7 +7,7 @@ import {
   Bell, BookOpen, CalendarCheck, CalendarClock, CalendarDays, Check,
   CheckCircle2, ChevronDown, CircleHelp, Clock3, Download, FileCheck,
   Filter, GraduationCap, LayoutDashboard, LogOut, Mail, Menu, MessageSquare,
-  MoreHorizontal, Moon, Plus, Search, Settings, ShieldCheck, Sparkles, Sun, Users,
+  History, MoreHorizontal, Moon, Plus, Search, Settings, ShieldCheck, Sparkles, Sun, Users,
   Wallet, X, UserRound, ClipboardList, FileText, UserPlus
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -30,6 +30,13 @@ type ClassOption = { id: string; name: string };
 type SubjectOption = { id: string; name: string };
 type WorkspaceMetric = { label: string; value: string; delta: string; tone: string; icon: string };
 type WorkspaceNotification = { id: string; title: string; body: string; created_at: string; read_at: string | null; timeLabel?: string };
+type AuditLogRow = { id: number; actor_id: string | null; action: string; resource_type: string; resource_id: string | null; details: unknown; created_at: string };
+
+function auditChangedFields(details: unknown): string[] {
+  if (!details || typeof details !== "object" || !("changed_fields" in details)) return [];
+  const fields = (details as { changed_fields?: unknown }).changed_fields;
+  return Array.isArray(fields) ? fields.filter((field): field is string => typeof field === "string") : [];
+}
 
 const navigation: Record<AppRole, NavGroup[]> = {
   admin: [
@@ -49,6 +56,7 @@ const navigation: Record<AppRole, NavGroup[]> = {
     { title: "Insights", items: [
       { key: "grades", label: "Academic results", icon: BookOpen },
       { key: "reports", label: "Reports & analytics", icon: BarChart3 },
+      { key: "audit", label: "Audit log", icon: History },
       { key: "finance", label: "Finance", icon: Wallet },
     ] },
     { title: "Preferences", items: [{ key: "settings", label: "Settings", icon: Settings }] },
@@ -113,6 +121,7 @@ const pageCopy: Record<ViewKey, { title: string; description: string }> = {
   grades: { title: "Academic results", description: "Follow learning progress and assessment records." },
   communication: { title: "Communication", description: "Keep school announcements and conversations in one place." },
   reports: { title: "Reports & analytics", description: "Turn school activity into a clear operational picture." },
+  audit: { title: "Audit log", description: "Review who changed important school records and when." },
   finance: { title: "Finance", description: "Review fee status and school-related payment records." },
   settings: { title: "Workspace settings", description: "Manage your profile, preferences and account security." },
 };
@@ -317,13 +326,14 @@ function AssignmentTable({ rows }: { rows: AssignmentRow[] }) {
 }
 
 function ModuleView({
-  view, role, students, assignments, announcements, query, onCreate, onNavigate, demoMode
+  view, role, students, assignments, announcements, auditLogs, query, onCreate, onNavigate, demoMode
 }: {
   view: ViewKey;
   role: AppRole;
   students: StudentRow[];
   assignments: AssignmentRow[];
   announcements: AnnouncementRow[];
+  auditLogs: AuditLogRow[];
   query: string;
   onCreate: (kind: ModalKind) => void;
   onNavigate: (view: ViewKey) => void;
@@ -331,6 +341,28 @@ function ModuleView({
 }) {
   if (view === "tcas-learning") return <TcasLearningModule role={role} demoMode={demoMode} />;
   if (view === "tcas") return <TcasModule role={role} demoMode={demoMode} />;
+  if (view === "audit") {
+    if (role !== "admin") return <section className="panel"><div className="section-note" role="alert"><ShieldCheck size={17}/> Audit history is restricted to school administrators.</div></section>;
+    return <>
+      <div className="page-heading"><div><div className="breadcrumb">Administration / Governance</div><h1>{pageCopy.audit.title}</h1><p>{pageCopy.audit.description}</p></div><span className="status-pill blue">{demoMode ? "Demo" : `${auditLogs.length} recent events`}</span></div>
+      {demoMode
+        ? <section className="panel"><div className="inline-empty">Audit events are written by the live database. This demo workspace does not create real audit records.</div></section>
+        : <section className="panel table-panel">
+            <div className="panel-header"><div><h2 className="panel-title">Recent record changes</h2><p className="panel-subtitle">Latest 100 database events · metadata only</p></div></div>
+            <div className="table-wrap"><table className="data-table"><thead><tr><th>Time</th><th>Actor ID</th><th>Action</th><th>Resource</th><th>Record ID</th><th>Changed fields</th></tr></thead><tbody>
+              {auditLogs.map((entry) => <tr key={entry.id}>
+                <td>{new Intl.DateTimeFormat("th-TH", { dateStyle: "medium", timeStyle: "short" }).format(new Date(entry.created_at))}</td>
+                <td>{entry.actor_id ? `${entry.actor_id.slice(0, 8)}…` : "System / service"}</td>
+                <td><span className={`status-pill ${entry.action === "delete" ? "red" : entry.action === "insert" ? "green" : "blue"}`}>{entry.action.toUpperCase()}</span></td>
+                <td>{entry.resource_type}</td>
+                <td>{entry.resource_id || "—"}</td>
+                <td>{auditChangedFields(entry.details).join(", ") || "—"}</td>
+              </tr>)}
+            </tbody></table>{auditLogs.length === 0 && <div className="table-empty">No audited changes have been recorded yet.</div>}</div>
+          </section>}
+      <div className="section-note" style={{ marginTop: 15 }}><ShieldCheck size={17}/><span>Audit entries are written by database triggers. The application cannot edit or delete them. Entries record the action, resource identifier and field names; they do not copy student or guardian values.</span></div>
+    </>;
+  }
   if (!demoMode && ["attendance", "teachers", "classes", "grades", "reports", "finance"].includes(view)) {
     const liveNotices: Partial<Record<ViewKey, string>> = {
       attendance: "Attendance sessions and status marking are not yet available as a complete workflow. No sample attendance totals are shown in live mode.",
@@ -383,6 +415,7 @@ export function Workspace({
   const [notifications, setNotifications] = useState<WorkspaceNotification[]>(demoMode ? demoNotifications.map((item) => ({ id: item.id, title: item.title, body: item.detail, created_at: new Date().toISOString(), read_at: item.unread ? null : new Date().toISOString(), timeLabel: item.time })) : []);
   const [isLoading, setIsLoading] = useState(!demoMode);
   const [loadError, setLoadError] = useState("");
+  const [auditLogs, setAuditLogs] = useState<AuditLogRow[]>([]);
   const [tasks, setTasks] = useState(demoMode ? baseTasks : []);
   const [classes, setClasses] = useState<ClassOption[]>([]);
   const [subjects, setSubjects] = useState<SubjectOption[]>([]);
@@ -416,8 +449,12 @@ export function Workspace({
         supabase.from("notifications").select("id, title, body, created_at, read_at").order("created_at", { ascending: false }).limit(10),
       ]);
       if (cancelled) return;
-      const failedQueries = [studentResult, assignmentResult, announcementResult, classResult, subjectResult, notificationResult].filter((result) => result.error);
-      if (failedQueries.length) setLoadError("Some school data could not be loaded. Refresh or contact the administrator if the problem continues.");
+      const auditResult = role === "admin"
+        ? await supabase.from("audit_logs").select("id, actor_id, action, resource_type, resource_id, details, created_at").order("created_at", { ascending: false }).limit(100)
+        : null;
+      if (cancelled) return;
+      const hasLoadError = [studentResult.error, assignmentResult.error, announcementResult.error, classResult.error, subjectResult.error, notificationResult.error, auditResult?.error].some(Boolean);
+      if (hasLoadError) setLoadError("Some school data could not be loaded. Refresh or contact the administrator if the problem continues.");
       else setLoadError("");
 
       if (studentResult.data) setStudents(studentResult.data.map((row) => ({
@@ -449,6 +486,8 @@ export function Workspace({
       if (notificationResult.data) setNotifications(notificationResult.data.map((item) => ({
         id: item.id, title: item.title, body: item.body, created_at: item.created_at, read_at: item.read_at,
       })));
+      if (auditResult?.data) setAuditLogs(auditResult.data as AuditLogRow[]);
+      else if (role !== "admin") setAuditLogs([]);
       } catch {
         if (!cancelled) setLoadError("The school data service could not be reached. Check the connection and try again.");
       } finally {
@@ -458,7 +497,7 @@ export function Workspace({
 
     void load();
     return () => { cancelled = true; };
-  }, [demoMode]);
+  }, [demoMode, role]);
 
   useEffect(() => {
     if (!toast) return;
@@ -658,7 +697,7 @@ export function Workspace({
           {!demoMode && loadError && <div className="form-error" role="alert">{loadError}</div>}
           {activeView === "overview"
             ? <Dashboard role={role} name={profileName} students={students} assignments={assignments} announcements={announcements} tasks={tasks} onTaskToggle={toggleTask} onNavigate={navigate} onCreate={openCreate} demoMode={demoMode} />
-            : <ModuleView view={activeView} role={role} students={visibleStudents} assignments={assignments.filter((a) => `${a.title} ${a.class_name}`.toLowerCase().includes(search.toLowerCase()))} announcements={announcements} query={search} onCreate={openCreate} onNavigate={navigate} demoMode={demoMode} />
+            : <ModuleView view={activeView} role={role} students={visibleStudents} assignments={assignments.filter((a) => `${a.title} ${a.class_name}`.toLowerCase().includes(search.toLowerCase()))} announcements={announcements} auditLogs={auditLogs} query={search} onCreate={openCreate} onNavigate={navigate} demoMode={demoMode} />
           }
           {["students", "assignments", "communication"].includes(activeView) && <div className="module-actions" style={{ justifyContent: "flex-end", marginTop: 15 }}><button className="secondary-button" onClick={exportCurrentData}><Download size={14} /> Export visible data</button></div>}
           <footer className="workspace-footer"><span>RNMCOM · School, connected.</span><span><ShieldCheck size={12} /> {demoMode ? "Demo data" : loadError ? "Live data · partial load" : isLoading ? "Live data · loading" : "Live data · connected"}</span></footer>
