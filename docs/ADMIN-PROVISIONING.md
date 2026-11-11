@@ -10,12 +10,18 @@
 - Passwords are never written to RNMCOM tables, metadata, or logs. Supabase Auth stores the password hash.
 - The setup code expires after seven days and can only be consumed once. It is stored only as a SHA-256 hash.
 
+## Existing first-admin account created from an earlier invitation
+- The current school administrator is already present in Supabase Auth, confirmed, and assigned the `admin` role.
+- If that administrator did not finish setting a password after the earlier invitation, open the production sign-in page at `https://rnmcom.vercel.app/login`, select **Forgot password?**, and complete the password-reset link from the same address.
+- This is password recovery for an already-confirmed account, not email-address confirmation. The sign-in page sets the recovery redirect from the current website origin, so start from the production domain rather than localhost.
+- Never send a password or store it in the school profile tables.
+
 ## Invite teachers
 - Sign in as the first administrator.
 - Open Dashboard → School management → Teachers.
 - Invite the teacher using their school email, name and optional employee code, department and title.
 - Choose `teacher` or `homeroom_teacher`.
-- The current teacher flow sends an Auth invitation; it is separate from first-admin bootstrap.
+- The current teacher flow sends an Auth invitation; it is separate from first-admin bootstrap. Submit invitations from the production website so the redirect target is the production HTTPS domain, not localhost.
 
 ## Required deployment configuration
 - Set Supabase Auth Site URL to `https://rnmcom.vercel.app`.
