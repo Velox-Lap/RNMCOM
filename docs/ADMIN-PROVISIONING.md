@@ -16,10 +16,10 @@
 - Supabase Auth sends the invitation. The Edge Function creates the profile, role and teacher record; the invited user sets their own password.
 
 ## Required deployment configuration
-- Set Supabase Auth Site URL to the canonical RNMCOM URL.
-- Add the canonical URL and the RNMCOM Vercel preview URL pattern to Supabase Auth Redirect URLs.
-- Configure the Auth email provider / SMTP and invitation email template.
-- Set `APP_SITE_URL` for both Edge Functions to the canonical app URL.
+- Set Supabase Auth Site URL to `https://rnmcom.vercel.app`.
+- Add these Supabase Auth Redirect URLs: `https://rnmcom.vercel.app/auth/callback`, `https://rnmcom-*.vercel.app/auth/callback`, and `http://localhost:3000/auth/callback` for local development.
+- Configure the Auth email provider / SMTP and verify the invitation email template uses the Supabase confirmation URL.
+- Set `APP_SITE_URL=https://rnmcom.vercel.app` for both Edge Functions (the browser Origin is also validated for supported RNMCOM preview deployments).
 - Ensure Vercel has `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
 
 ## Security
