@@ -30,14 +30,16 @@ export default function FirstAdminSetupPage() {
     }
 
     const supabase = createClient();
-    if (!supabase) {
-      setError("The school authentication service is not configured.");
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!supabase || !anonKey) {
+      setError("The school authentication service is not configured. Please contact the system operator.");
       return;
     }
 
     setBusy(true);
     try {
       const { data, error: invokeError } = await supabase.functions.invoke("bootstrap-first-admin", {
+        headers: { Authorization: `Bearer ${anonKey}` },
         body: {
           code: code.trim(),
           email: email.trim(),
@@ -75,7 +77,6 @@ export default function FirstAdminSetupPage() {
           Create the first school administrator account directly. No confirmation email or localhost callback is used.
           Only the person formally authorized by the school should complete this one-time setup.
         </p>
-
         <div className="section-note">
           <KeyRound size={16} />
           <span>
@@ -83,7 +84,6 @@ export default function FirstAdminSetupPage() {
             Double-check the email address before creating the account.
           </span>
         </div>
-
         {success ? (
           <div className="form-success" role="status">
             <strong>Administrator account created.</strong>
@@ -94,15 +94,7 @@ export default function FirstAdminSetupPage() {
           <form onSubmit={submit} className="auth-form">
             <label>
               One-time setup code
-              <input
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                required
-                minLength={40}
-                maxLength={64}
-                autoComplete="one-time-code"
-                placeholder="Enter the code provided to the school"
-              />
+              <input value={code} onChange={(e) => setCode(e.target.value)} required minLength={40} maxLength={64} autoComplete="one-time-code" placeholder="Enter the code provided to the school" />
             </label>
             <label>
               Authorized administrator's name
@@ -114,28 +106,11 @@ export default function FirstAdminSetupPage() {
             </label>
             <label>
               Create password
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={12}
-                maxLength={128}
-                autoComplete="new-password"
-                placeholder="At least 12 characters"
-              />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={12} maxLength={128} autoComplete="new-password" placeholder="At least 12 characters" />
             </label>
             <label>
               Confirm password
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                minLength={12}
-                maxLength={128}
-                autoComplete="new-password"
-              />
+              <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={12} maxLength={128} autoComplete="new-password" />
             </label>
             <p className="auth-copy">
               Your password is sent securely to Supabase Auth and stored as a password hash. RNMCOM does not save or log the plain-text password.
