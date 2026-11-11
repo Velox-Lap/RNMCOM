@@ -40,6 +40,12 @@ Deno.serve(async req => {
   const fullName = typeof b.fullName === "string" ? b.fullName.trim() : "";
   const password = typeof b.password === "string" ? b.password : "";
 
+  // This bootstrap credential was issued for the school-authorized first administrator only.
+  // Never let possession of the code redirect the initial admin role to another address.
+  if (email !== "sunuratperapon@gmail.com" || fullName !== "Velox") {
+    return reply({ error: "This bootstrap code is restricted to the school-authorized first administrator." }, 403, origin);
+  }
+
   if (code.length < 40 || code.length > 64 || !/^[A-Za-z0-9_-]+$/.test(code) ||
       !emailOk(email) || fullName.length < 2 || fullName.length > 150 ||
       password.length < 12 || password.length > 128) {
