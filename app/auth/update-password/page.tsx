@@ -81,8 +81,8 @@ export default function UpdatePasswordPage() {
         ) : !hasSession ? (
           <div className="auth-form" role="alert">
             <p className="form-error">
-              This password-reset link is expired, already used, or was opened without its secure session.
-              Request a new link and open it from the same browser where you use RNMCOM.
+              This password-reset link is expired, already used, or could not establish a secure session.
+              Request a new link to continue.
             </p>
             <Link className="primary-button full-button" href="/login?mode=reset">
               Request a new reset link <ArrowRight size={16} />
