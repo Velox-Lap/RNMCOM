@@ -103,7 +103,7 @@ export default function LoginPage() {
             {busy ? "Please wait…" : resetMode ? "Send recovery link" : "Sign in"} <ArrowRight size={16} />
           </button>
         </form>
-        {!resetMode && (
+        {!resetMode && !demoMode && (
           <div className="guest-access">
             <div className="guest-access-divider"><span>OR</span></div>
             <Link href="/guest" className="secondary-button full-button guest-access-button">
