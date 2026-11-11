@@ -1,39 +1,53 @@
-# First administrator and staff provisioning
+# RNMCOM Auth recovery and onboarding
 
-## First administrator (no email confirmation)
-- The school appoints one authorized person and verifies the intended email address through its own process.
-- An operator gives that person the one-time setup code out of band.
-- Open `/setup/first-admin`, enter the code, name, school email, and a new password twice.
-- The page calls the server-only `bootstrap-first-admin` Edge Function over HTTPS.
-- The function atomically claims the one-time code, then calls Supabase Auth Admin `createUser` with `email_confirm: true`. No invitation or confirmation email is sent, and no email callback URL is involved.
-- The database trigger creates the profile; the bootstrap RPC assigns the first `admin` role and consumes the code.
-- Passwords are never written to RNMCOM tables, metadata, or logs. Supabase Auth stores the password hash.
-- The setup code expires after seven days and can only be consumed once. It is stored only as a SHA-256 hash.
+## Why the previous password-reset email returned to sign-in
+The previous recovery email used Supabase's default `{{ .ConfirmationURL }}` PKCE link. The callback exchanged the auth code and silently returned to `/login` whenever the PKCE exchange failed. PKCE code exchange depends on the verifier stored by the browser that initiated the recovery request; opening a link in a different browser context can therefore lose the verifier.
 
-## Existing first-admin account created from an earlier invitation
-- The current school administrator is already present in Supabase Auth, confirmed, and assigned the `admin` role.
-- If that administrator did not finish setting a password after the earlier invitation, open the production sign-in page at `https://rnmcom.vercel.app/login`, select **Forgot password?**, and complete the password-reset link from the same address.
-- This is password recovery for an already-confirmed account, not email-address confirmation. The sign-in page sets the recovery redirect from the current website origin, so start from the production domain rather than localhost.
-- Never send a password or store it in the school profile tables.
+The app callback now supports both:
+- `token_hash` + `type=recovery|invite` using server-side `verifyOtp` and cookie persistence. This does not depend on the requesting browser's PKCE verifier.
+- Existing `code` callbacks using `exchangeCodeForSession`.
 
-## Invite teachers
-- Sign in as the first administrator.
-- Open Dashboard → School management → Teachers.
-- Invite the teacher using their school email, name and optional employee code, department and title.
-- Choose `teacher` or `homeroom_teacher`.
-- The current teacher flow sends an Auth invitation; it is separate from first-admin bootstrap. Submit invitations from the production website so the redirect target is the production HTTPS domain, not localhost.
+The update-password page now checks for a real session before showing the form. Expired or already-used links get a clear recovery message instead of presenting a non-working form.
 
-## Required deployment configuration
-- Set Supabase Auth Site URL to `https://rnmcom.vercel.app`.
-- Add the app callback URLs required by the teacher invitation flow, including the production callback and the specific Vercel preview callback.
-- For the first-admin flow, no Auth email redirect is used.
-- Set `APP_SITE_URL=https://rnmcom.vercel.app` for both Edge Functions (the browser Origin is also validated for supported RNMCOM preview deployments).
-- Ensure Vercel has `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+## Required Supabase Dashboard email-template change
+The repository code is ready for token-hash links, but hosted Supabase email templates are project configuration and are not stored in Git. Update them once in **Supabase Dashboard → Authentication → Email Templates**.
 
-## Security
-- No public sign-up or client-side role assignment.
-- First-admin creation requires a high-entropy single-use setup code and is restricted to the first account only.
-- The code is hashed in the private schema; claim and completion are serialized and re-check that no admin exists.
-- The Edge Function keeps service-role operations server-side and only returns success/error metadata.
-- Passwords travel over HTTPS directly to Supabase Auth Admin and are not stored in application tables.
-- Teacher invitations require a valid signed-in administrator and allow only teacher roles.
+### Reset Password template
+Set the HTML content to:
+
+```html
+<h2>Reset your RNMCOM password</h2>
+<p>We received a request to reset your password. Use the secure link below to choose a new one.</p>
+<p><a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&amp;type=recovery&amp;next=%2Fauth%2Fupdate-password">Reset password</a></p>
+<p>If you did not request this, you can safely ignore this email.</p>
+```
+
+### Invite User template
+Set the HTML content to:
+
+```html
+<h2>You have been invited to RNMCOM</h2>
+<p>Use the secure link below to set your password and access your school workspace.</p>
+<p><a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&amp;type=invite&amp;next=%2Fauth%2Fupdate-password">Accept invitation</a></p>
+```
+
+Set the Auth **Site URL** to `https://rnmcom.vercel.app`. Ensure `https://rnmcom.vercel.app/auth/callback` is in the allowed Redirect URLs. The token-hash templates use `.SiteURL` directly and the app callback verifies the hash server-side.
+
+After saving the templates, request a **new** password-reset email. Previously sent messages still contain the old PKCE link and are not rewritten.
+
+## User flow after the template change
+1. User selects **Forgot password?** on `https://rnmcom.vercel.app/login`.
+2. Supabase sends a one-time recovery token hash link.
+3. The callback verifies the hash with `verifyOtp({ token_hash, type: "recovery" })`.
+4. The callback stores the resulting session in Supabase SSR cookies and redirects to `/auth/update-password`.
+5. The user enters and confirms a new password (minimum 12 characters).
+6. The app calls `auth.updateUser({ password })` and routes to the dashboard.
+
+Teacher invitations use the same token-hash callback with `type=invite` after the Invite User template is updated.
+
+## Security notes
+- Tokens are single-use and must never be logged or copied into support messages.
+- The callback only accepts the expected OTP types and only allows local in-app destinations.
+- The callback logs only safe error codes/status, never the URL, token hash, auth code, or credentials.
+- Passwords are sent directly to Supabase Auth over HTTPS. RNMCOM never stores plaintext passwords.
+- Never ask a user to send a password or recovery link to support.
