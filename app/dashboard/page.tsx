@@ -12,16 +12,7 @@ const isConfigured = Boolean(
 );
 
 export default async function DashboardPage() {
-  if (!isConfigured) {
-    return (
-      <Workspace
-        initialRoles={["admin", "teacher", "homeroom_teacher", "student", "parent"]}
-        initialRole="admin"
-        demoMode
-        profileName="Alex Morgan"
-      />
-    );
-  }
+  if (!isConfigured) redirect("/guest");
 
   const supabase = await createClient();
   const { data: claimsData } = await supabase.auth.getClaims();
