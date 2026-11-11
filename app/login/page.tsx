@@ -23,26 +23,34 @@ export default function LoginPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("error");
-    if (code === "role-not-assigned") setRouteNotice("Your account is not assigned a school role yet. Contact the school administrator.");
-    else if (code === "not-configured") setRouteNotice("The authentication project has not been configured.");
-    else if (code) setRouteNotice("The sign-in link could not be verified. Please try again.");
+
+    if (params.get("mode") === "reset") setResetMode(true);
+    if (code === "role-not-assigned") {
+      setRouteNotice("Your account is not assigned a school role yet. Contact the school administrator.");
+    } else if (code === "not-configured") {
+      setRouteNotice("The authentication project has not been configured.");
+    } else if (code === "auth-link-invalid") {
+      setRouteNotice("That password or invitation link is invalid, expired, or already used. Request a fresh link.");
+    } else if (code) {
+      setRouteNotice("The sign-in link could not be verified. Please request a new link.");
+    }
   }, []);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
     setError("");
+
     const supabase = createClient();
     if (!supabase) return setError("The Supabase project is not configured yet.");
     setBusy(true);
 
     if (resetMode) {
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/callback?next=/auth/update-password`,
-      });
+      const redirectTo = new URL("/auth/callback?next=%2Fauth%2Fupdate-password", window.location.origin).toString();
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
       setBusy(false);
       if (resetError) return setError(resetError.message);
-      return setMessage("Password recovery instructions have been sent if the account exists.");
+      return setMessage("If this account exists, a password-reset email has been sent. Open the new link to set your password.");
     }
 
     const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
@@ -73,7 +81,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        {routeNotice && <p className="form-error">{routeNotice}</p>}
+        {routeNotice && <p className="form-error" role="alert">{routeNotice}</p>}
         <form onSubmit={submit} className="auth-form">
           <label>
             School email
@@ -89,8 +97,8 @@ export default function LoginPage() {
             <span>School-managed account</span>
             {!resetMode && <button type="button" className="text-button" onClick={() => { setResetMode(true); setError(""); setMessage(""); }}>Forgot password?</button>}
           </div>
-          {error && <p className="form-error">{error}</p>}
-          {message && <p className="form-success">{message}</p>}
+          {error && <p className="form-error" role="alert">{error}</p>}
+          {message && <p className="form-success" role="status">{message}</p>}
           <button className="primary-button full-button" type="submit" disabled={busy || demoMode}>
             {busy ? "Please wait…" : resetMode ? "Send recovery link" : "Sign in"} <ArrowRight size={16} />
           </button>
