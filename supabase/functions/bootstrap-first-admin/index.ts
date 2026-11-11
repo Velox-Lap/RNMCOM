@@ -17,7 +17,7 @@ function headers(origin: string): HeadersInit {
 function reply(data: Record<string, unknown>, status: number, origin: string) {
   return new Response(JSON.stringify(data), { status, headers: headers(origin) });
 }
-function emailOk(v: string) { return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(v) && v.length <= 254; }
+function emailOk(v: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) && v.length <= 254; }
 async function hash(v: string) {
   const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v));
   return Array.from(new Uint8Array(d)).map(x => x.toString(16).padStart(2, "0")).join("");
