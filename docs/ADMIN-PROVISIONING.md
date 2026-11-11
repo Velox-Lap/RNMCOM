@@ -1,30 +1,33 @@
 # First administrator and staff provisioning
 
-## First administrator
-- The school appoints one authorized person and provides their official school email.
+## First administrator (no email confirmation)
+- The school appoints one authorized person and verifies the intended email address through its own process.
 - An operator gives that person the one-time setup code out of band.
-- Open `/setup/first-admin`, enter the code, name and school email.
-- The Edge Function hashes the code, atomically claims it, checks that no admin role exists, sends a Supabase Auth invitation, and assigns the first `admin` role server-side.
-- The invited administrator follows the email link and sets a password at `/auth/update-password`.
-- The code expires after seven days and can only be consumed once. It is never stored in plaintext.
+- Open `/setup/first-admin`, enter the code, name, school email, and a new password twice.
+- The page calls the server-only `bootstrap-first-admin` Edge Function over HTTPS.
+- The function atomically claims the one-time code, then calls Supabase Auth Admin `createUser` with `email_confirm: true`. No invitation or confirmation email is sent, and no email callback URL is involved.
+- The database trigger creates the profile; the bootstrap RPC assigns the first `admin` role and consumes the code.
+- Passwords are never written to RNMCOM tables, metadata, or logs. Supabase Auth stores the password hash.
+- The setup code expires after seven days and can only be consumed once. It is stored only as a SHA-256 hash.
 
 ## Invite teachers
 - Sign in as the first administrator.
 - Open Dashboard → School management → Teachers.
 - Invite the teacher using their school email, name and optional employee code, department and title.
 - Choose `teacher` or `homeroom_teacher`.
-- Supabase Auth sends the invitation. The Edge Function creates the profile, role and teacher record; the invited user sets their own password.
+- The current teacher flow sends an Auth invitation; it is separate from first-admin bootstrap.
 
 ## Required deployment configuration
 - Set Supabase Auth Site URL to `https://rnmcom.vercel.app`.
-- Add these Supabase Auth Redirect URLs: `https://rnmcom.vercel.app/auth/callback`, `https://rnmcom-*.vercel.app/auth/callback`, and `http://localhost:3000/auth/callback` for local development.
-- Configure the Auth email provider / SMTP and verify the invitation email template uses the Supabase confirmation URL.
+- Add the app callback URLs required by the teacher invitation flow, including the production callback and the specific Vercel preview callback.
+- For the first-admin flow, no Auth email redirect is used.
 - Set `APP_SITE_URL=https://rnmcom.vercel.app` for both Edge Functions (the browser Origin is also validated for supported RNMCOM preview deployments).
 - Ensure Vercel has `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
 
 ## Security
 - No public sign-up or client-side role assignment.
-- Bootstrap RPC functions are executable only by `service_role`.
-- The token table is in the private schema with no client privileges.
-- The database serializes first-admin claims and re-checks the absence of an admin role before completion.
+- First-admin creation requires a high-entropy single-use setup code and is restricted to the first account only.
+- The code is hashed in the private schema; claim and completion are serialized and re-check that no admin exists.
+- The Edge Function keeps service-role operations server-side and only returns success/error metadata.
+- Passwords travel over HTTPS directly to Supabase Auth Admin and are not stored in application tables.
 - Teacher invitations require a valid signed-in administrator and allow only teacher roles.
