@@ -76,8 +76,8 @@ export default function LoginPage() {
         {demoMode && (
           <div className="demo-callout">
             <ShieldCheck size={18} />
-            <div><strong>Demo environment</strong><span>Backend credentials are not configured. You can preview the sample workspace.</span></div>
-            <Link href="/dashboard">Open demo <ArrowRight size={14} /></Link>
+            <div><strong>Guest preview</strong><span>No account required. Sample data only; all changes are disabled.</span></div>
+            <Link href="/guest">Open guest preview <ArrowRight size={14} /></Link>
           </div>
         )}
 
@@ -103,6 +103,15 @@ export default function LoginPage() {
             {busy ? "Please wait…" : resetMode ? "Send recovery link" : "Sign in"} <ArrowRight size={16} />
           </button>
         </form>
+        {!resetMode && (
+          <div className="guest-access">
+            <div className="guest-access-divider"><span>OR</span></div>
+            <Link href="/guest" className="secondary-button full-button guest-access-button">
+              <Eye size={16} /> Continue as Guest · View only
+            </Link>
+            <p className="guest-access-note">No sign-in needed. Guest access uses sample data and cannot change school records.</p>
+          </div>
+        )}
         {resetMode && <button type="button" className="text-button back-to-login" onClick={() => { setResetMode(false); setError(""); setMessage(""); }}>Back to sign in</button>}
         <div className="auth-footer"><ShieldCheck size={15} /> Protected school workspace · Privacy first</div>
       </section>
