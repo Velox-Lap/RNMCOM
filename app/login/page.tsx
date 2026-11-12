@@ -76,8 +76,7 @@ export default function LoginPage() {
         {demoMode && (
           <div className="demo-callout">
             <ShieldCheck size={18} />
-            <div><strong>Guest preview</strong><span>No account required. Sample data only; all changes are disabled.</span></div>
-            <Link href="/guest">Open guest preview <ArrowRight size={14} /></Link>
+            <div><strong>Preview environment</strong><span>Sign in is unavailable in demo mode. Continue as Guest to view the sample workspace.</span></div>
           </div>
         )}
 
@@ -103,7 +102,7 @@ export default function LoginPage() {
             {busy ? "Please wait…" : resetMode ? "Send recovery link" : "Sign in"} <ArrowRight size={16} />
           </button>
         </form>
-        {!resetMode && !demoMode && (
+        {!resetMode && (
           <div className="guest-access">
             <div className="guest-access-divider"><span>OR</span></div>
             <Link href="/guest" className="secondary-button full-button guest-access-button">
