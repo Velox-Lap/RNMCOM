@@ -246,6 +246,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .text-button { border: 0; padding: 0; color: #426fd8; background: transparent; font-size: 10px; font-weight: 700; }
 .text-button:hover { color: #204eb8; }
 .full-button { width: 100%; min-height: 44px; }
+.guest-access { margin-top: 18px; }
+.guest-access-divider { display: flex; align-items: center; gap: 10px; margin: 16px 0; color: #a0aaba; font-size: 9px; }
+.guest-access-divider::before, .guest-access-divider::after { content: ""; height: 1px; flex: 1; background: #edf0f5; }
+.guest-access-button { gap: 8px; }
+.guest-access-note { margin: 9px 0 0; color: #98a3b2; font-size: 9px; line-height: 1.5; text-align: center; }
 .back-to-login { margin-top: 15px; }
 .auth-footer { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 25px; padding-top: 17px; border-top: 1px solid #f0f2f6; color: #9ba6b5; font-size: 9px; }
 .auth-bottom { position: absolute; bottom: 21px; margin: 0; color: #a3adbc; font-size: 9px; }

@@ -195,7 +195,7 @@ function AttendanceChart() {
 }
 
 function Dashboard({
-  role, name, students, assignments, announcements, tasks, onTaskToggle, onNavigate, onCreate
+  role, name, students, assignments, announcements, tasks, onTaskToggle, onNavigate, onCreate, readOnly
 }: {
   role: AppRole;
   name: string;
@@ -206,6 +206,7 @@ function Dashboard({
   onTaskToggle: (id: number) => void;
   onNavigate: (view: ViewKey) => void;
   onCreate: (kind: ModalKind) => void;
+  readOnly: boolean;
 }) {
   const metrics = roleMetrics[role];
   const greet = role === "parent" ? "Good afternoon" : "Good afternoon";
@@ -248,7 +249,7 @@ function Dashboard({
     <>
       <div className="page-heading">
         <div><div className="breadcrumb">School workspace / {ROLE_LABELS[role]}</div><h1>{greet}, {name.split(" ")[0]}</h1><p>{ROLE_DESCRIPTIONS[role]}</p></div>
-        <div className="heading-actions"><button className="secondary-button" onClick={() => onNavigate("reports")}><BarChart3 size={15} /> View insights</button><button className="primary-button" onClick={() => onCreate(role === "teacher" ? "assignment" : "announcement")}><Plus size={15} /> {role === "teacher" ? "New assignment" : "New announcement"}</button></div>
+        <div className="heading-actions"><button className="secondary-button" onClick={() => onNavigate("reports")}><BarChart3 size={15} /> View insights</button>{!readOnly && <button className="primary-button" onClick={() => onCreate(role === "teacher" ? "assignment" : "announcement")}><Plus size={15} /> {role === "teacher" ? "New assignment" : "New announcement"}</button>}</div>
       </div>
 
       <section className="metric-grid">{metrics.map((metric) => <MetricCard key={metric.label} metric={metric} />)}</section>
@@ -264,7 +265,7 @@ function Dashboard({
             {role === "student" || role === "parent" ? (
               <div className="task-list">{assignments.slice(0,3).map((a) => <div className="task-item" key={a.id}><div className="task-check"><FileCheck size={11} /></div><div className="task-copy"><strong>{a.title}</strong><span>{a.class_name || "Class assignment"} · {formatRelativeDate(a.due_at)}</span></div><span className={`status-pill ${a.status === "Draft" ? "gray" : "amber"}`}>{a.status}</span></div>)}</div>
             ) : (
-              <div className="task-list">{tasks.map((task) => <div className="task-item" key={task.id}><button className={`task-check ${task.done ? "done" : ""}`} onClick={() => onTaskToggle(task.id)} aria-label={task.done ? "Mark task incomplete" : "Mark task complete"}>{task.done && <Check size={11} />}</button><div className="task-copy"><strong>{task.title}</strong><span>{task.note}</span></div><span className={`status-pill ${task.priority}`}>{task.done ? "Done" : "Action"}</span></div>)}</div>
+              <div className="task-list">{tasks.map((task) => <div className="task-item" key={task.id}><button className={`task-check ${task.done ? "done" : ""}`} onClick={() => onTaskToggle(task.id)} disabled={readOnly} aria-label={task.done ? "Mark task incomplete" : "Mark task complete"}>{task.done && <Check size={11} />}</button><div className="task-copy"><strong>{task.title}</strong><span>{task.note}</span></div><span className={`status-pill ${task.priority}`}>{task.done ? "Done" : "Action"}</span></div>)}</div>
             )}
           </section>
         </div>
@@ -276,7 +277,7 @@ function Dashboard({
           </section>
           <section className="panel">
             <div className="panel-header"><div><h2 className="panel-title">Quick actions</h2><p className="panel-subtitle">Go straight to a common task</p></div><Sparkles size={16} color="#8a9bb5" /></div>
-            <div className="quick-action-grid">{actions.map((action) => { const Icon = action.icon; return <button key={action.title} className="quick-action" onClick={() => action.kind ? onCreate(action.kind) : onNavigate(action.view)}><span className="quick-action-icon"><Icon size={16} /></span><span><strong>{action.title}</strong><span>{action.detail}</span></span></button>; })}</div>
+            <div className="quick-action-grid">{actions.filter((action) => !readOnly || !action.kind).map((action) => { const Icon = action.icon; return <button key={action.title} className="quick-action" onClick={() => action.kind ? onCreate(action.kind) : onNavigate(action.view)}><span className="quick-action-icon"><Icon size={16} /></span><span><strong>{action.title}</strong><span>{action.detail}</span></span></button>; })}</div>
           </section>
           <section className="panel">
             <div className="panel-header"><div><h2 className="panel-title">School announcements</h2><p className="panel-subtitle">Latest updates from your school</p></div><button className="panel-link" onClick={() => onNavigate("communication")}>See all <ArrowRight size={13} /></button></div>
@@ -309,7 +310,7 @@ function AssignmentTable({ rows }: { rows: AssignmentRow[] }) {
 }
 
 function ModuleView({
-  view, role, students, assignments, announcements, query, onCreate, onNavigate, demoMode
+  view, role, students, assignments, announcements, query, onCreate, onNavigate, demoMode, readOnly
 }: {
   view: ViewKey;
   role: AppRole;
@@ -320,17 +321,18 @@ function ModuleView({
   onCreate: (kind: ModalKind) => void;
   onNavigate: (view: ViewKey) => void;
   demoMode: boolean;
+  readOnly: boolean;
 }) {
-  if (view === "tcas-learning") return <TcasLearningModule role={role} demoMode={demoMode} />;
-  if (view === "tcas") return <TcasModule role={role} demoMode={demoMode} />;
+  if (view === "tcas-learning") return <TcasLearningModule role={role} demoMode={demoMode} readOnly={readOnly} />;
+  if (view === "tcas") return <TcasModule role={role} demoMode={demoMode} readOnly={readOnly} />;
   const filteredStudents = students.filter((s) => `${s.first_name} ${s.last_name} ${s.student_code} ${s.class_name}`.toLowerCase().includes(query.toLowerCase()));
   const filteredAssignments = assignments.filter((a) => `${a.title} ${a.class_name}`.toLowerCase().includes(query.toLowerCase()));
-  if (view === "students") return <><div className="page-heading"><div><div className="breadcrumb">School management</div><h1>{pageCopy.students.title}</h1><p>{pageCopy.students.description}</p></div><div className="heading-actions"><button className="primary-button" onClick={() => onNavigate("settings")}><Plus size={15} /> Account provisioning</button></div></div><div className="section-note"><ShieldCheck size={17} /><span>Student records are protected by relationship-aware access policies. Creating a student requires a provisioned account and an authorized school administrator.</span></div><div style={{ height: 15 }} /><StudentTable rows={filteredStudents} /></>;
-  if (view === "assignments") return <><div className="page-heading"><div><div className="breadcrumb">Learning management</div><h1>{pageCopy.assignments.title}</h1><p>{pageCopy.assignments.description}</p></div>{(role === "admin" || role === "teacher") && <div className="heading-actions"><button className="primary-button" onClick={() => onCreate("assignment")}><Plus size={15} /> Create assignment</button></div>}</div><div className="module-grid" style={{ marginBottom: 16 }}><div className="module-card"><span className="status-pill blue">Published</span><div className="module-stat">{filteredAssignments.filter((a) => a.status === "Published").length}</div><p>Active assignments in your workspace</p></div><div className="module-card"><span className="status-pill amber">Needs attention</span><div className="module-stat">{filteredAssignments.filter((a) => a.status === "Grading").length}</div><p>Assignments currently being reviewed</p></div></div><AssignmentTable rows={filteredAssignments} /></>;
-  if (view === "attendance") return <><div className="page-heading"><div><div className="breadcrumb">School operations</div><h1>{pageCopy.attendance.title}</h1><p>{pageCopy.attendance.description}</p></div>{(role === "admin" || role === "teacher") && <div className="heading-actions"><button className="primary-button" onClick={() => onCreate("attendance")}><Plus size={15} /> Start attendance</button></div>}</div><div className="module-grid"><div className="module-card"><span className="status-pill green">Present</span><div className="module-stat">342</div><p>Students marked present today across the school.</p><div className="progress-track"><div className="progress-fill" style={{ width: "95%" }} /></div><div className="progress-meta"><span>95% attendance rate</span><span>342 / 360</span></div></div><div className="module-card"><span className="status-pill amber">Review queue</span><div className="module-stat">8</div><p>Records or requests that need authorized review.</p><button className="panel-link" onClick={() => onNavigate("reports")}>View attendance report <ArrowRight size={13} /></button></div><div className="module-card full"><h3>Attendance workflow</h3><p>Teachers create a class session, record each student once, and close the register. Students and guardians see only the records their account is authorized to access.</p><div className="module-actions"><button className="secondary-button" onClick={() => onNavigate("students")}>View students</button><button className="secondary-button" onClick={() => onNavigate("reports")}>Attendance analytics</button></div></div></div></>;
-  if (view === "teachers") return role === "admin" ? <ProvisioningModule /> : <><div className="page-heading"><div><div className="breadcrumb">School management</div><h1>{pageCopy.teachers.title}</h1><p>{pageCopy.teachers.description}</p></div></div><div className="section-note"><ShieldCheck size={17} /><span>Staff account provisioning is restricted to school administrators. Contact your administrator if you need an account or role change.</span></div></>;if (view === "classes") return <><div className="page-heading"><div><div className="breadcrumb">School structure</div><h1>{pageCopy.classes.title}</h1><p>{pageCopy.classes.description}</p></div></div><div className="module-grid"><div className="module-card"><span className="status-pill blue">Academic structure</span><div className="module-stat">12</div><p>Illustrative class groups across the school.</p></div><div className="module-card"><span className="status-pill violet">Subjects</span><div className="module-stat">24</div><p>Illustrative subject catalogue.</p></div><div className="module-card full"><h3>Class relationships</h3><p>Classes connect students, homeroom teachers, subjects and teaching assignments. The live database exposes records only when a user's school relationship permits access.</p></div></div></>;
+  if (view === "students") return <><div className="page-heading"><div><div className="breadcrumb">School management</div><h1>{pageCopy.students.title}</h1><p>{pageCopy.students.description}</p></div>{!readOnly && <div className="heading-actions"><button className="primary-button" onClick={() => onNavigate("settings")}><Plus size={15} /> Account provisioning</button></div>}</div><div className="section-note"><ShieldCheck size={17} /><span>Student records are protected by relationship-aware access policies. Creating a student requires a provisioned account and an authorized school administrator.</span></div><div style={{ height: 15 }} /><StudentTable rows={filteredStudents} /></>;
+  if (view === "assignments") return <><div className="page-heading"><div><div className="breadcrumb">Learning management</div><h1>{pageCopy.assignments.title}</h1><p>{pageCopy.assignments.description}</p></div>{(role === "admin" || role === "teacher") && !readOnly && <div className="heading-actions"><button className="primary-button" onClick={() => onCreate("assignment")}><Plus size={15} /> Create assignment</button></div>}</div><div className="module-grid" style={{ marginBottom: 16 }}><div className="module-card"><span className="status-pill blue">Published</span><div className="module-stat">{filteredAssignments.filter((a) => a.status === "Published").length}</div><p>Active assignments in your workspace</p></div><div className="module-card"><span className="status-pill amber">Needs attention</span><div className="module-stat">{filteredAssignments.filter((a) => a.status === "Grading").length}</div><p>Assignments currently being reviewed</p></div></div><AssignmentTable rows={filteredAssignments} /></>;
+  if (view === "attendance") return <><div className="page-heading"><div><div className="breadcrumb">School operations</div><h1>{pageCopy.attendance.title}</h1><p>{pageCopy.attendance.description}</p></div>{(role === "admin" || role === "teacher") && !readOnly && <div className="heading-actions"><button className="primary-button" onClick={() => onCreate("attendance")}><Plus size={15} /> Start attendance</button></div>}</div><div className="module-grid"><div className="module-card"><span className="status-pill green">Present</span><div className="module-stat">342</div><p>Students marked present today across the school.</p><div className="progress-track"><div className="progress-fill" style={{ width: "95%" }} /></div><div className="progress-meta"><span>95% attendance rate</span><span>342 / 360</span></div></div><div className="module-card"><span className="status-pill amber">Review queue</span><div className="module-stat">8</div><p>Records or requests that need authorized review.</p><button className="panel-link" onClick={() => onNavigate("reports")}>View attendance report <ArrowRight size={13} /></button></div><div className="module-card full"><h3>Attendance workflow</h3><p>Teachers create a class session, record each student once, and close the register. Students and guardians see only the records their account is authorized to access.</p><div className="module-actions"><button className="secondary-button" onClick={() => onNavigate("students")}>View students</button><button className="secondary-button" onClick={() => onNavigate("reports")}>Attendance analytics</button></div></div></div></>;
+  if (view === "teachers") return readOnly ? <><div className="page-heading"><div><div className="breadcrumb">School management</div><h1>{pageCopy.teachers.title}</h1><p>{pageCopy.teachers.description}</p></div></div><div className="section-note"><ShieldCheck size={17} /><span>The staff directory and account provisioning are not available in Guest preview.</span></div></> : role === "admin" ? <ProvisioningModule /> : <><div className="page-heading"><div><div className="breadcrumb">School management</div><h1>{pageCopy.teachers.title}</h1><p>{pageCopy.teachers.description}</p></div></div><div className="section-note"><ShieldCheck size={17} /><span>Staff account provisioning is restricted to school administrators. Contact your administrator if you need an account or role change.</span></div></>;if (view === "classes") return <><div className="page-heading"><div><div className="breadcrumb">School structure</div><h1>{pageCopy.classes.title}</h1><p>{pageCopy.classes.description}</p></div></div><div className="module-grid"><div className="module-card"><span className="status-pill blue">Academic structure</span><div className="module-stat">12</div><p>Illustrative class groups across the school.</p></div><div className="module-card"><span className="status-pill violet">Subjects</span><div className="module-stat">24</div><p>Illustrative subject catalogue.</p></div><div className="module-card full"><h3>Class relationships</h3><p>Classes connect students, homeroom teachers, subjects and teaching assignments. The live database exposes records only when a user's school relationship permits access.</p></div></div></>;
   if (view === "grades") return <><div className="page-heading"><div><div className="breadcrumb">Academic</div><h1>{pageCopy.grades.title}</h1><p>{pageCopy.grades.description}</p></div></div><div className="module-grid"><div className="module-card"><span className="status-pill blue">Current term</span><div className="module-stat">{role === "student" || role === "parent" ? "3.63" : "82.4%"}</div><p>{role === "student" || role === "parent" ? "Illustrative grade average from the audit." : "Average assessment completion in the sample workspace."}</p></div><div className="module-card"><span className="status-pill green">Progress</span><div className="module-stat">+0.18</div><p>Illustrative change from the previous reporting period.</p></div><div className="module-card full"><h3>Assessment records</h3><p>Grade records are scoped to the student's own profile, authorized guardians, the teachers assigned to the class and subject, and school administrators. Changes to scores should be auditable.</p><div className="module-actions"><button className="secondary-button" onClick={() => onNavigate("assignments")}>Review assignments</button><button className="secondary-button" onClick={() => onNavigate("reports")}>Learning analytics</button></div></div></div></>;
-  if (view === "communication") return <><div className="page-heading"><div><div className="breadcrumb">School connect</div><h1>{pageCopy.communication.title}</h1><p>{pageCopy.communication.description}</p></div>{(role === "admin" || role === "teacher" || role === "homeroom_teacher") && <div className="heading-actions"><button className="primary-button" onClick={() => onCreate("announcement")}><Plus size={15} /> New announcement</button></div>}</div><section className="panel">{announcements.filter((a) => `${a.title} ${a.body}`.toLowerCase().includes(query.toLowerCase())).map((a) => <article className="announcement-item" key={a.id}><div className="announcement-meta"><span>{a.author || "School office"}</span><span>{formatDate(a.created_at)}</span></div><strong>{a.title}</strong><p>{a.body}</p><div style={{ marginTop: 8 }}><span className="status-pill blue">{(a.audience || ["School community"]).join(", ")}</span></div></article>)}{announcements.length === 0 && <div className="inline-empty">There are no announcements yet.</div>}</section><div style={{ height: 16 }} /><div className="section-note"><ShieldCheck size={17} /><span>Announcements are filtered by the audience roles assigned to the signed-in account. Direct messaging and push delivery are staged for a later communication phase.</span></div></>;
+  if (view === "communication") return <><div className="page-heading"><div><div className="breadcrumb">School connect</div><h1>{pageCopy.communication.title}</h1><p>{pageCopy.communication.description}</p></div>{(role === "admin" || role === "teacher" || role === "homeroom_teacher") && !readOnly && <div className="heading-actions"><button className="primary-button" onClick={() => onCreate("announcement")}><Plus size={15} /> New announcement</button></div>}</div><section className="panel">{announcements.filter((a) => `${a.title} ${a.body}`.toLowerCase().includes(query.toLowerCase())).map((a) => <article className="announcement-item" key={a.id}><div className="announcement-meta"><span>{a.author || "School office"}</span><span>{formatDate(a.created_at)}</span></div><strong>{a.title}</strong><p>{a.body}</p><div style={{ marginTop: 8 }}><span className="status-pill blue">{(a.audience || ["School community"]).join(", ")}</span></div></article>)}{announcements.length === 0 && <div className="inline-empty">There are no announcements yet.</div>}</section><div style={{ height: 16 }} /><div className="section-note"><ShieldCheck size={17} /><span>Announcements are filtered by the audience roles assigned to the signed-in account. Direct messaging and push delivery are staged for a later communication phase.</span></div></>;
   if (view === "reports") return <><div className="page-heading"><div><div className="breadcrumb">Insights</div><h1>{pageCopy.reports.title}</h1><p>{pageCopy.reports.description}</p></div><div className="heading-actions"><button className="secondary-button" onClick={() => onNavigate("attendance")}><CalendarCheck size={14} /> Attendance report</button></div></div><div className="metric-grid"><MetricCard metric={roleMetrics.admin[0]} /><MetricCard metric={roleMetrics.admin[1]} /><MetricCard metric={roleMetrics.admin[2]} /><MetricCard metric={roleMetrics.admin[3]} /></div><section className="panel"><div className="panel-header"><div><h2 className="panel-title">School attendance trend</h2><p className="panel-subtitle">Illustrative overview based on the supplied product audit</p></div><span className="status-pill blue">Last 7 days</span></div><AttendanceChart /></section><div style={{ height: 16 }} /><div className="section-note"><AlertCircle size={17} /><span>Analytics shown in Demo mode are sample figures only. In a live project, reports should be calculated from the same underlying attendance, academic and finance records used by each role.</span></div></>;
   if (view === "finance") return <><div className="page-heading"><div><div className="breadcrumb">Administration</div><h1>{pageCopy.finance.title}</h1><p>{pageCopy.finance.description}</p></div></div><div className="module-grid"><div className="module-card"><span className="status-pill green">Outstanding</span><div className="module-stat">฿0</div><p>Illustrative account balance shown in the audit's Parent dashboard.</p></div><div className="module-card"><span className="status-pill blue">Billing records</span><div className="module-stat">—</div><p>Live invoices appear only for administrators and guardians with finance permission.</p></div><div className="module-card full"><h3>Privacy and finance access</h3><p>Guardians must be explicitly linked to each student and separately granted permission to view finance records. Students, unrelated guardians and teachers do not receive finance access by default.</p></div></div></>;
   return <><div className="page-heading"><div><div className="breadcrumb">Preferences</div><h1>{pageCopy.settings.title}</h1><p>{pageCopy.settings.description}</p></div></div><div className="module-grid"><div className="module-card"><span className="status-pill green">Account</span><h3 style={{ marginTop: 14 }}>Identity & access</h3><p>Roles are assigned by a trusted administrator. Your available workspaces are shown in the role selector.</p></div><div className="module-card"><span className="status-pill blue">Preferences</span><h3 style={{ marginTop: 14 }}>Language & notifications</h3><p>Notification preferences and localization controls are reserved for the next configuration iteration.</p></div><div className="module-card full"><h3>First administrator setup</h3><p>After Supabase is connected, create a trusted user in Authentication, then run the one-time role bootstrap statement documented in supabase/schema.sql. The app intentionally has no public sign-up or self-service role assignment.</p><div className="module-actions"><button className="secondary-button" onClick={() => onNavigate("overview")}>Return to overview</button></div></div></div></>;
@@ -340,11 +342,13 @@ export function Workspace({
   initialRoles,
   initialRole,
   demoMode,
+  readOnly = false,
   profileName,
 }: {
   initialRoles: AppRole[];
   initialRole: AppRole;
   demoMode: boolean;
+  readOnly?: boolean;
   profileName: string;
 }) {
   const router = useRouter();
@@ -372,7 +376,7 @@ export function Workspace({
   const [formError, setFormError] = useState("");
 
   const allRoles = initialRoles.length ? initialRoles : [initialRole];
-  const navGroups = navigation[role];
+  const navGroups = readOnly ? navigation[role].filter((group) => group.title !== "Preferences") : navigation[role];
   const page = pageCopy[activeView];
 
   useEffect(() => {
@@ -438,6 +442,7 @@ export function Workspace({
   }
 
   function openCreate(kind: ModalKind) {
+    if (readOnly) return;
     setModalKind(kind);
     setDraftTitle("");
     setDraftBody("");
@@ -450,6 +455,7 @@ export function Workspace({
 
   async function submitCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (readOnly) return;
     setFormError("");
     if (!draftTitle.trim()) return setFormError("Please enter a title.");
     setBusy(true);
@@ -532,13 +538,16 @@ export function Workspace({
   }
 
   async function signOut() {
-    const supabase = createClient();
-    if (supabase) await supabase.auth.signOut();
+    if (!readOnly) {
+      const supabase = createClient();
+      if (supabase) await supabase.auth.signOut();
+    }
     router.replace("/login");
     router.refresh();
   }
 
   async function markAllNotificationsRead() {
+    if (readOnly) return;
     if (!demoMode) {
       const supabase = createClient();
       if (supabase) {
@@ -551,10 +560,12 @@ export function Workspace({
   }
 
   function toggleTask(id: number) {
+    if (readOnly) return;
     setTasks((current) => current.map((task) => task.id === id ? { ...task, done: !task.done } : task));
   }
 
   function exportCurrentData() {
+    if (readOnly) return;
     const rows = activeView === "students" ? students
       : activeView === "assignments" ? assignments
         : announcements;
@@ -596,26 +607,26 @@ export function Workspace({
             <label className="search-box"><Search size={16} /><input aria-label="Search this workspace" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search students, assignments..." /><span className="search-shortcut">⌘ K</span></label>
           </div>
           <div className="topbar-right">
-            {demoMode && <span className="status-pill amber">Demo</span>}
+            {readOnly ? <span className="status-pill blue">Guest · View only</span> : demoMode && <span className="status-pill amber">Demo</span>}
             {allRoles.length > 1 && <select className="role-select" aria-label="Switch workspace role" value={role} onChange={(e) => { const next = e.target.value; if (isAppRole(next) && allRoles.includes(next)) { setRole(next); setActiveView("overview"); } }}><option value="" disabled>Switch role</option>{allRoles.map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}</select>}
-            <div className="popover-anchor"><button className="topbar-action" aria-label="Notifications" aria-expanded={notificationsOpen} onClick={() => { setNotificationsOpen(!notificationsOpen); setProfileOpen(false); }}><Bell size={18} />{unreadCount > 0 && <i className="notification-dot" />}</button>{notificationsOpen && <div className="dropdown-panel"><div className="dropdown-head"><div><strong>Notifications</strong><span> {unreadCount} unread</span></div><button className="text-button" onClick={markAllNotificationsRead}>Mark all read</button></div>{demoNotifications.map((item) => <div className={`notification-item ${item.unread ? "unread" : ""}`} key={item.id}>{item.unread && <i className="notification-bullet" />}<div><strong>{item.title}</strong><p>{item.detail}</p><span>{item.time}</span></div></div>)}</div>}</div>
+            <div className="popover-anchor"><button className="topbar-action" aria-label="Notifications" aria-expanded={notificationsOpen} onClick={() => { setNotificationsOpen(!notificationsOpen); setProfileOpen(false); }}><Bell size={18} />{unreadCount > 0 && <i className="notification-dot" />}</button>{notificationsOpen && <div className="dropdown-panel"><div className="dropdown-head"><div><strong>Notifications</strong><span> {unreadCount} unread</span></div>{!readOnly && <button className="text-button" onClick={markAllNotificationsRead}>Mark all read</button>}</div>{demoNotifications.map((item) => <div className={`notification-item ${item.unread ? "unread" : ""}`} key={item.id}>{item.unread && <i className="notification-bullet" />}<div><strong>{item.title}</strong><p>{item.detail}</p><span>{item.time}</span></div></div>)}</div>}</div>
             <div className="top-divider" />
-            <div className="popover-anchor"><button className="profile-trigger" onClick={() => { setProfileOpen(!profileOpen); setNotificationsOpen(false); }} aria-expanded={profileOpen}><span className="avatar">{initials(profileName)}</span><span className="profile-copy"><strong>{profileName}</strong><span>{ROLE_LABELS[role]}</span></span><ChevronDown size={14} color="#9aa5b4" /></button>{profileOpen && <div className="dropdown-panel profile-menu"><button onClick={() => { navigate("settings"); setProfileOpen(false); }}><UserRound size={15} /> Profile & preferences</button><button onClick={() => { navigate("settings"); setProfileOpen(false); }}><ShieldCheck size={15} /> Account security</button><button className="danger" onClick={signOut}><LogOut size={15} /> Sign out</button></div>}</div>
+            <div className="popover-anchor"><button className="profile-trigger" onClick={() => { setProfileOpen(!profileOpen); setNotificationsOpen(false); }} aria-expanded={profileOpen}><span className="avatar">{initials(profileName)}</span><span className="profile-copy"><strong>{profileName}</strong><span>{ROLE_LABELS[role]}</span></span><ChevronDown size={14} color="#9aa5b4" /></button>{profileOpen && <div className="dropdown-panel profile-menu">{!readOnly && <><button onClick={() => { navigate("settings"); setProfileOpen(false); }}><UserRound size={15} /> Profile & preferences</button><button onClick={() => { navigate("settings"); setProfileOpen(false); }}><ShieldCheck size={15} /> Account security</button></>}<button className="danger" onClick={signOut}><LogOut size={15} /> {readOnly ? "Exit guest preview" : "Sign out"}</button></div>}</div>
           </div>
         </header>
 
         <main className="content">
-          {demoMode && <div className="demo-banner"><AlertCircle size={15} /><strong>Preview environment</strong><span>Sample data only — actions here do not change real school records.</span></div>}
+          {readOnly ? <div className="demo-banner"><AlertCircle size={15} /><strong>Guest preview · Read only</strong><span>Sample data only — live school records are not accessible and all changes are disabled.</span></div> : demoMode && <div className="demo-banner"><AlertCircle size={15} /><strong>Preview environment</strong><span>Sample data only — actions here do not change real school records.</span></div>}
           {activeView === "overview"
-            ? <Dashboard role={role} name={profileName} students={students} assignments={assignments} announcements={announcements} tasks={tasks} onTaskToggle={toggleTask} onNavigate={navigate} onCreate={openCreate} />
-            : <ModuleView view={activeView} role={role} students={visibleStudents} assignments={assignments.filter((a) => `${a.title} ${a.class_name}`.toLowerCase().includes(search.toLowerCase()))} announcements={announcements} query={search} onCreate={openCreate} onNavigate={navigate} demoMode={demoMode} />
+            ? <Dashboard role={role} name={profileName} students={students} assignments={assignments} announcements={announcements} tasks={tasks} onTaskToggle={toggleTask} onNavigate={navigate} onCreate={openCreate} readOnly={readOnly} />
+            : <ModuleView view={activeView} role={role} students={visibleStudents} assignments={assignments.filter((a) => `${a.title} ${a.class_name}`.toLowerCase().includes(search.toLowerCase()))} announcements={announcements} query={search} onCreate={openCreate} onNavigate={navigate} demoMode={demoMode} readOnly={readOnly} />
           }
-          {activeView !== "overview" && activeView !== "settings" && <div className="module-actions" style={{ justifyContent: "flex-end", marginTop: 15 }}><button className="secondary-button" onClick={exportCurrentData}><Download size={14} /> Export visible data</button></div>}
-          <footer className="workspace-footer"><span>RNMCOM · School, connected.</span><span><ShieldCheck size={12} /> Role-aware workspace · {demoMode ? "Demo data" : "Supabase connected"}</span></footer>
+          {!readOnly && activeView !== "overview" && activeView !== "settings" && <div className="module-actions" style={{ justifyContent: "flex-end", marginTop: 15 }}><button className="secondary-button" onClick={exportCurrentData}><Download size={14} /> Export visible data</button></div>}
+          <footer className="workspace-footer"><span>RNMCOM · School, connected.</span><span><ShieldCheck size={12} /> Role-aware workspace · {readOnly ? "Guest preview · Read only" : demoMode ? "Demo data" : "Supabase connected"}</span></footer>
         </main>
       </div>
 
-      {modalKind && <div className="modal-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) setModalKind(null); }}><section className="modal-card" role="dialog" aria-modal="true" aria-labelledby="create-heading"><div className="modal-header"><h2 id="create-heading">{modalKind === "assignment" ? "Create assignment" : modalKind === "announcement" ? "Publish announcement" : "Start attendance session"}</h2><button className="icon-button" aria-label="Close dialog" onClick={() => setModalKind(null)}><X size={18} /></button></div><form onSubmit={submitCreate}><div className="modal-body">
+      {!readOnly && modalKind && <div className="modal-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) setModalKind(null); }}><section className="modal-card" role="dialog" aria-modal="true" aria-labelledby="create-heading"><div className="modal-header"><h2 id="create-heading">{modalKind === "assignment" ? "Create assignment" : modalKind === "announcement" ? "Publish announcement" : "Start attendance session"}</h2><button className="icon-button" aria-label="Close dialog" onClick={() => setModalKind(null)}><X size={18} /></button></div><form onSubmit={submitCreate}><div className="modal-body">
         {modalKind !== "attendance" && <label>Title<input value={draftTitle} onChange={(e) => setDraftTitle(e.target.value)} placeholder={modalKind === "assignment" ? "e.g. Functions and Graphs — Problem Set 05" : "e.g. School schedule update"} required maxLength={140} /></label>}
         <label>{modalKind === "attendance" ? "Class" : "Description"}{modalKind === "attendance" ? <select value={draftClass} onChange={(e) => setDraftClass(e.target.value)} required><option value="">Select a class</option>{classes.map((c) => <option value={c.id} key={c.id}>{c.name}</option>)}</select> : <textarea value={draftBody} onChange={(e) => setDraftBody(e.target.value)} placeholder="Add useful context for your audience..." maxLength={4000} />}</label>
         {modalKind === "assignment" && <>
